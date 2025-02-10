@@ -1,29 +1,83 @@
 import { useState, useRef, useEffect } from 'react';
 import { socketService } from '../../utils/socket';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
-export default function Chat({ selectedChat }) {
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  
+  return date.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+export default function Chat({ selectedChat, onNewMessage }) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const { user, token } = useAuth();
   
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (behavior = "smooth") => {
+    if (messagesEndRef.current) {
+      const container = messagesContainerRef.current;
+      const isScrolledNearBottom = 
+        container && 
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+      if (isScrolledNearBottom || behavior === "instant") {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior, 
+          block: "end" 
+        });
+      }
+    }
   };
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    scrollToBottom("smooth");
+  }, [messages]);
+
+  useEffect(() => {
+    if (token) {
+      socketService.connect(token);
+    }
+    return () => socketService.disconnect();
+  }, [token]);
+
+  useEffect(() => {
+    const handleNewMessage = (newMessage) => {
+      console.log('New message received:', newMessage);
+      if (selectedChat?._id === newMessage.conversationId) {
+        setMessages(prev => [...prev, newMessage]);
+        if (onNewMessage) onNewMessage();
+      }
+    };
+
+    const cleanup = socketService.onMessage(handleNewMessage);
+    return () => cleanup();
+  }, [selectedChat?._id, onNewMessage]);
 
   useEffect(() => {
     if (selectedChat?._id) {
       fetchMessages();
     }
-  }, [selectedChat]);
+  }, [selectedChat?._id]);
 
   const fetchMessages = async () => {
     try {
+      setLoading(true);
       const response = await api.get(`/api/chats/${selectedChat._id}`);
-      setMessages(response.data.messages);
+      setMessages(response.data.messages || []);
       setLoading(false);
-      scrollToBottom();
+      // Use instant scroll when loading initial messages
+      setTimeout(() => scrollToBottom("instant"), 100);
       
       // Mark messages as read
       await api.put(`/api/chats/${selectedChat._id}/read`);
@@ -38,13 +92,22 @@ export default function Chat({ selectedChat }) {
     if (!message.trim()) return;
 
     try {
-      const response = await api.post(`/api/chats/${selectedChat._id}`, {
-        content: message
+      // Send message through socket first
+      socketService.sendMessage(
+        selectedChat.otherUser._id,
+        message.trim(),
+        selectedChat._id
+      );
+
+      // Clear input immediately for better UX
+      setMessage('');
+
+      // Save to database
+      await api.post(`/api/chats/${selectedChat._id}`, {
+        content: message.trim()
       });
 
-      setMessages(response.data.messages);
-      setMessage('');
-      scrollToBottom();
+      if (onNewMessage) onNewMessage();
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -61,26 +124,26 @@ export default function Chat({ selectedChat }) {
   return (
     <>
       {/* Messages Container */}
-      <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 p-4 overflow-y-auto custom-scrollbar"
+      >
         <div className="space-y-4">
-          {messages.map((msg) => (
+          {messages.map((msg, index) => (
             <div
-              key={msg._id}
-              className={`flex ${msg.sender._id === selectedChat.otherUser._id ? 'justify-start' : 'justify-end'}`}
+              key={msg._id || index}
+              className={`flex ${msg.sender._id === user._id ? 'justify-end' : 'justify-start'}`}
             >
               <div
                 className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                  msg.sender._id === selectedChat.otherUser._id
-                    ? 'bg-dark-700/50 text-dark-200'
-                    : 'bg-primary-500 text-white'
+                  msg.sender._id === user._id
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-dark-700/50 text-dark-200'
                 }`}
               >
                 <p className="text-sm">{msg.content}</p>
                 <p className="mt-1 text-xs opacity-70">
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {formatDate(msg.createdAt)}
                 </p>
               </div>
             </div>
@@ -110,4 +173,4 @@ export default function Chat({ selectedChat }) {
       </div>
     </>
   );
-} 
+}

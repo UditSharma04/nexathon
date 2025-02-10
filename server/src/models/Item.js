@@ -69,6 +69,10 @@ const itemSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Insurance value is required'],
     min: [0, 'Insurance value cannot be negative']
+  },
+  totalBookings: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
@@ -76,4 +80,4 @@ const itemSchema = new mongoose.Schema({
 
 itemSchema.index({ location: '2dsphere' });
 
-export default mongoose.model('Item', itemSchema); 
+export default mongoose.models.Item || mongoose.model('Item', itemSchema);

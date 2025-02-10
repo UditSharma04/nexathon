@@ -4,29 +4,36 @@ import User from '../models/User.js';
 export const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    console.log('Auth Header:', authHeader); // Debug log
 
+    const token = authHeader && authHeader.split(' ')[1];
     if (!token) {
+      console.log('No token found'); // Debug log
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Find the user in database
-    const user = await User.findById(decoded._id);
-    
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Decoded token:', decoded); // Debug log
+
+      const user = await User.findById(decoded._id);
+      if (!user) {
+        console.log('User not found for id:', decoded._id); // Debug log
+        return res.status(401).json({ message: 'User not found' });
+      }
+
+      req.user = {
+        id: user._id,
+        email: user.email,
+        name: user.name
+      };
+      
+      console.log('Authenticated user:', req.user); // Debug log
+      next();
+    } catch (jwtError) {
+      console.log('JWT verification failed:', jwtError); // Debug log
+      return res.status(401).json({ message: 'Invalid token' });
     }
-
-    // Set user info in request
-    req.user = {
-      id: user._id,
-      email: user.email,
-      name: user.name
-    };
-
-    next();
   } catch (error) {
     console.error('Auth middleware error:', error);
     res.status(500).json({ message: 'Authentication error' });
@@ -58,4 +65,4 @@ export const auth = async (req, res, next) => {
     console.error('Auth Error:', error);
     res.status(401).json({ message: 'Please authenticate' });
   }
-}; 
+};

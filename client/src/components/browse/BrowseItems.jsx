@@ -440,12 +440,17 @@ export default function BrowseItems() {
         )}
       </div>
 
-      {/* BookingModal component */}
-      <BookingModal
-        isOpen={showBookingModal}
-        onClose={() => setShowBookingModal(false)}
-        item={selectedItem}
-      />
+      {/* Only render BookingModal if selectedItem exists */}
+      {selectedItem && (
+        <BookingModal
+          isOpen={showBookingModal}
+          onClose={() => {
+            setShowBookingModal(false);
+            setSelectedItem(null);
+          }}
+          item={selectedItem}
+        />
+      )}
     </DashboardLayout>
   );
 } 

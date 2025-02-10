@@ -1,229 +1,192 @@
 import { useState } from 'react';
+import { bookingsAPI } from '../../services/api';
 
-export default function BookingModal({ isOpen, onClose, item, selectedDate }) {
-  const [step, setStep] = useState(1);
+export default function BookingModal({ isOpen, onClose, item }) {
   const [formData, setFormData] = useState({
+    startDate: '',
     startTime: '',
+    endDate: '',
     endTime: '',
     message: '',
-    paymentMethod: '',
+    paymentMethod: 'paypal',
     agreeToTerms: false
   });
 
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Return null or loading state if item is not available
+  if (!item) {
+    return null;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (step < 3) {
-      setStep(step + 1);
-      return;
-    }
-    // TODO: Submit booking request to API
-    console.log('Booking submitted:', { ...formData, date: selectedDate });
-    onClose();
-  };
+    setError('');
+    setLoading(true);
 
-  if (!isOpen) return null;
+    try {
+      if (item.period === 'hour' && (!formData.startTime || !formData.endTime)) {
+        throw new Error('Please select both start and end times');
+      }
 
-  const renderStepContent = () => {
-    switch (step) {
-      case 1:
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-dark-300">
-                Pickup Time
-              </label>
-              <input
-                type="time"
-                value={formData.startTime}
-                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="mt-1 block w-full rounded-lg bg-dark-900/50 border border-dark-700/50 text-white focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              />
-            </div>
+      if (!formData.startDate || !formData.endDate) {
+        throw new Error('Please select both start and end dates');
+      }
 
-            <div>
-              <label className="block text-sm font-medium text-dark-300">
-                Return Time
-              </label>
-              <input
-                type="time"
-                value={formData.endTime}
-                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="mt-1 block w-full rounded-lg bg-dark-900/50 border border-dark-700/50 text-white focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              />
-            </div>
+      // Create start and end datetime objects
+      const startDateTime = new Date(formData.startDate);
+      const endDateTime = new Date(formData.endDate);
 
-            <div>
-              <label className="block text-sm font-medium text-dark-300">
-                Message to Owner
-              </label>
-              <textarea
-                rows={3}
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="mt-1 block w-full rounded-lg bg-dark-900/50 border border-dark-700/50 text-white focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                placeholder="Introduce yourself and explain your project..."
-              />
-            </div>
-          </div>
-        );
+      if (item.period === 'hour') {
+        const [startHours, startMinutes] = formData.startTime.split(':');
+        const [endHours, endMinutes] = formData.endTime.split(':');
+        
+        startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
+        endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
+      }
 
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div className="bg-dark-800/50 rounded-xl p-4">
-              <h4 className="text-sm font-medium text-white">Booking Summary</h4>
-              <div className="mt-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-dark-300">Date</span>
-                  <span className="text-white">{selectedDate}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-dark-300">Time</span>
-                  <span className="text-white">{formData.startTime} - {formData.endTime}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-dark-300">Rate</span>
-                  <span className="text-white">${item.price}/{item.period}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-dark-300">Insurance Deposit</span>
-                  <span className="text-white">${item.insurance}</span>
-                </div>
-                <div className="pt-2 mt-2 border-t border-dark-700/50 flex justify-between font-medium">
-                  <span className="text-dark-300">Total</span>
-                  <span className="text-primary-400">${item.price + item.insurance}</span>
-                </div>
-              </div>
-            </div>
+      // Validate that end time is after start time
+      if (endDateTime <= startDateTime) {
+        throw new Error('End time must be after start time');
+      }
 
-            <div>
-              <label className="block text-sm font-medium text-dark-300">
-                Payment Method
-              </label>
-              <select
-                value={formData.paymentMethod}
-                onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                className="mt-1 block w-full rounded-lg bg-dark-900/50 border border-dark-700/50 text-white focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              >
-                <option value="">Select payment method</option>
-                <option value="card">Credit/Debit Card</option>
-                <option value="paypal">PayPal</option>
-              </select>
-            </div>
-          </div>
-        );
+      // Create booking request data
+      const bookingData = {
+        itemId: item._id,
+        startDate: startDateTime.toISOString(),
+        endDate: endDateTime.toISOString(),
+        message: formData.message.trim(),
+        period: item.period
+      };
 
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="bg-dark-800/50 rounded-xl p-4">
-              <div className="flex items-center">
-                <div className="h-12 w-12 rounded-full bg-primary-500/10 flex items-center justify-center">
-                  <span className="text-lg font-medium text-primary-400">
-                    {item.owner.name.charAt(0)}
-                  </span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-white">{item.owner.name}</p>
-                  <p className="text-xs text-dark-400">
-                    Usually responds within {item.owner.responseTime}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="terms"
-                    type="checkbox"
-                    checked={formData.agreeToTerms}
-                    onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
-                    className="h-4 w-4 rounded border-dark-700/50 bg-dark-900/50 text-primary-500 focus:ring-primary-500"
-                  />
-                </div>
-                <div className="ml-3">
-                  <label htmlFor="terms" className="text-sm text-dark-300">
-                    I agree to treat the item with care and follow all usage rules. I understand that I'm responsible for any damage beyond normal wear and tear.
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
+      const response = await bookingsAPI.createRequest(item._id, bookingData);
+      console.log('Booking request created:', response.data);
+      onClose();
+    } catch (err) {
+      console.error('Booking error:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to create booking request');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div 
-        className="fixed inset-0 bg-dark-900/80 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-dark-800/50 backdrop-blur-xl border border-dark-700/50 p-6 shadow-xl transition-all">
-          <div className="absolute right-4 top-4">
-            <button
-              onClick={onClose}
-              className="text-dark-400 hover:text-white transition-colors"
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="mb-8">
-            <h3 className="text-lg font-medium text-white">Book {item.name}</h3>
-            <div className="mt-2 flex items-center space-x-4">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className={`flex items-center ${i < step ? 'text-primary-400' : i === step ? 'text-white' : 'text-dark-400'}`}
-                >
-                  <span className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                    i < step ? 'bg-primary-500' : i === step ? 'bg-dark-700' : 'bg-dark-800'
-                  }`}>
-                    {i < step ? (
-                      <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    ) : (
-                      i
-                    )}
-                  </span>
-                  <span className="ml-2 text-sm">
-                    {i === 1 ? 'Details' : i === 2 ? 'Payment' : 'Confirm'}
-                  </span>
-                </div>
-              ))}
+    <div className={`fixed inset-0 z-50 ${isOpen ? 'block' : 'hidden'}`}>
+      <div className="absolute inset-0 bg-dark-900/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+        <div className="bg-dark-800/50 backdrop-blur-xl rounded-xl border border-dark-700/50 p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Book {item.name}</h2>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Date Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-dark-300 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  className="w-full bg-dark-900/50 border border-dark-700/50 rounded-lg px-4 py-2 text-white focus:ring-primary-500 focus:border-primary-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-dark-300 mb-1">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  className="w-full bg-dark-900/50 border border-dark-700/50 rounded-lg px-4 py-2 text-white focus:ring-primary-500 focus:border-primary-500"
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <form onSubmit={handleSubmit}>
-            {renderStepContent()}
+            {/* Time Selection for Hourly Bookings */}
+            {item.period === 'hour' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-dark-300 mb-1">
+                    Start Time
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.startTime}
+                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                    className="w-full bg-dark-900/50 border border-dark-700/50 rounded-lg px-4 py-2 text-white focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark-300 mb-1">
+                    End Time
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.endTime}
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                    className="w-full bg-dark-900/50 border border-dark-700/50 rounded-lg px-4 py-2 text-white focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  />
+                </div>
+              </div>
+            )}
 
-            <div className="mt-6 flex justify-end space-x-3">
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setStep(step - 1)}
-                  className="px-4 py-2 text-sm font-medium text-dark-300 hover:text-white rounded-xl hover:bg-dark-700/50 transition-colors"
-                >
-                  Back
-                </button>
-              )}
+            {/* Message */}
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1">
+                Message to Owner
+              </label>
+              <textarea
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                className="w-full bg-dark-900/50 border border-dark-700/50 rounded-lg px-4 py-2 text-white focus:ring-primary-500 focus:border-primary-500"
+                rows={3}
+                placeholder="Introduce yourself and explain your need for the item..."
+                required
+              />
+            </div>
+
+            {/* Terms Agreement */}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={formData.agreeToTerms}
+                onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
+                className="h-4 w-4 text-primary-500 focus:ring-primary-500 border-dark-700/50 rounded"
+                required
+              />
+              <label htmlFor="terms" className="ml-2 text-sm text-dark-300">
+                I agree to the terms and conditions
+              </label>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="text-red-500 text-sm">{error}</div>
+            )}
+
+            {/* Submit Button */}
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-dark-300 bg-dark-700/50 rounded-lg hover:bg-dark-700 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
-                disabled={step === 3 && !formData.agreeToTerms}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-xl hover:from-primary-500 hover:to-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900 focus:ring-primary-500 disabled:opacity-50 transition-all duration-300 ease-in-out transform hover:translate-y-[-2px] hover:shadow-lg hover:shadow-primary-500/25 active:translate-y-0"
+                disabled={loading || !formData.agreeToTerms}
+                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg hover:from-primary-500 hover:to-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900 focus:ring-primary-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {step === 3 ? 'Send Request' : 'Continue'}
+                {loading ? 'Submitting...' : 'Submit Request'}
               </button>
             </div>
           </form>
