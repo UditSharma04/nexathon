@@ -62,25 +62,76 @@
   width: 100%;
   height: 100%;
   z-index: 1;
+  background-color: #1a1a1a !important;
 }
 
 .leaflet-control-container .leaflet-control {
-  background-color: rgba(30, 30, 30, 0.8);
+  background-color: rgba(26, 46, 26, 0.9) !important;
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(100, 108, 255, 0.2) !important;
   color: white;
 }
 
 .leaflet-control-container .leaflet-control a {
-  color: white;
+  color: #a4a4a4 !important;
+  transition: color 0.2s ease;
+}
+
+.leaflet-control-container .leaflet-control a:hover {
+  color: white !important;
+  background-color: rgba(100, 108, 255, 0.1) !important;
 }
 
 .leaflet-popup-content-wrapper {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(26, 46, 26, 0.95) !important;
   backdrop-filter: blur(8px);
-  border-radius: 0.75rem;
+  color: white !important;
+  border: 1px solid rgba(100, 108, 255, 0.2) !important;
+  border-radius: 0.75rem !important;
 }
 
 .leaflet-popup-tip {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(26, 46, 26, 0.95) !important;
+  border: 1px solid rgba(100, 108, 255, 0.2) !important;
+}
+
+.leaflet-popup-close-button {
+  color: #a4a4a4 !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #646cff !important;
+}
+
+/* Attribution link colors */
+.leaflet-container .leaflet-control-attribution {
+  background-color: rgba(26, 46, 26, 0.9) !important;
+  color: #a4a4a4 !important;
+}
+
+.leaflet-container .leaflet-control-attribution a {
+  color: #646cff !important;
+}
+
+.leaflet-container .leaflet-control-attribution a:hover {
+  color: #7c7cff !important;
+}
+
+/* Update zoom control styles */
+.leaflet-control-zoom {
+  background-color: #1a1a1a !important;
+  border: 1px solid rgba(67, 67, 67, 0.5) !important;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  background-color: #1a1a1a !important;
+  color: #a4a4a4 !important;
+  border-bottom: 1px solid rgba(67, 67, 67, 0.5) !important;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background-color: #282828 !important;
+  color: white !important;
 }
