@@ -12,6 +12,8 @@ import Bookings from './components/bookings/Bookings';
 import Messages from './components/messages/Messages';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Map from './components/map/Map';
+import BrowseItems from './components/browse/BrowseItems';
+import BrowseItemDetail from './components/browse/BrowseItemDetail';
 
 function AuthenticatedRoute() {
   const { isAuthenticated } = useAuth();
@@ -90,6 +92,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <Map />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/browse"
+            element={
+              <ProtectedRoute>
+                <BrowseItems />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/browse/:id"
+            element={
+              <ProtectedRoute>
+                <BrowseItemDetail />
               </ProtectedRoute>
             }
           />

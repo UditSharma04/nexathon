@@ -1,25 +1,16 @@
 import { useState, useEffect } from 'react';
-import DashboardLayout from '../dashboard/DashboardLayout';
-import AddItemModal from './AddItemModal';
-import { itemsAPI } from '../../services/api';
 import { Link } from 'react-router-dom';
+import DashboardLayout from '../dashboard/DashboardLayout';
+import { itemsAPI } from '../../services/api';
 import { processImage } from '../../utils/imageUtils';
-import EditItemModal from './EditItemModal';
-import DeleteConfirmationModal from '../common/DeleteConfirmationModal';
+import BookingModal from '../items/BookingModal';
 
-// Constants for view types
-const VIEW_TYPES = {
-  GRID: 'grid',
-  TABLE: 'table'
-};
-
-// Filter options
+// Filter options (similar to MyItems)
 const FILTER_OPTIONS = {
   STATUS: [
     { value: 'all', label: 'All Status' },
     { value: 'available', label: 'Available' },
-    { value: 'borrowed', label: 'Borrowed' },
-    { value: 'maintenance', label: 'Maintenance' }
+    { value: 'borrowed', label: 'Borrowed' }
   ],
   CATEGORY: [
     { value: 'all', label: 'All Categories' },
@@ -37,45 +28,43 @@ const FILTER_OPTIONS = {
   ]
 };
 
-function MyItems() {
+export default function BrowseItems() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
   const [processedImages, setProcessedImages] = useState({});
-  
-  // New states for filtering and view
-  const [viewType, setViewType] = useState(VIEW_TYPES.GRID);
+
+  // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
-  // Add these states for edit functionality
-  const [showEditModal, setShowEditModal] = useState(false);
+  // View type state
+  const [viewType, setViewType] = useState('grid'); // 'grid' or 'table'
+
+  // Booking modal state
+  const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Add these states
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  const fetchItems = async () => {
-    try {
-      const response = await itemsAPI.getMyItems();
-      setItems(response.data);
-    } catch (err) {
-      setError('Failed to fetch items');
-      console.error('Error fetching items:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Fetch items
   useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await itemsAPI.getAllItems();
+        setItems(response.data);
+      } catch (err) {
+        setError('Failed to fetch items');
+        console.error('Error fetching items:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchItems();
   }, []);
 
+  // Process images
   useEffect(() => {
     const processImages = async () => {
       const processed = {};
@@ -91,17 +80,6 @@ function MyItems() {
       processImages();
     }
   }, [items]);
-
-  const handleItemAdded = (newItem) => {
-    setItems(prevItems => [...prevItems, newItem]);
-  };
-
-  // Add this handler for item updates
-  const handleItemUpdated = (updatedItem) => {
-    setItems(items.map(item => 
-      item._id === updatedItem._id ? updatedItem : item
-    ));
-  };
 
   // Filter and sort items
   const filteredItems = items.filter(item => {
@@ -124,7 +102,6 @@ function MyItems() {
     }
   });
 
-  // First, add a clearFilters function
   const clearFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
@@ -132,34 +109,19 @@ function MyItems() {
     setSortBy('newest');
   };
 
-  // Add delete handler
-  const handleDelete = async () => {
-    setDeleteLoading(true);
-    try {
-      await itemsAPI.deleteItem(itemToDelete._id);
-      setItems(items.filter(item => item._id !== itemToDelete._id));
-      setShowDeleteModal(false);
-    } catch (err) {
-      console.error('Error deleting item:', err);
-    } finally {
-      setDeleteLoading(false);
-      setItemToDelete(null);
-    }
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header with Search and Add Button */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-2xl font-bold text-white">My Items</h1>
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-white">Browse Items</h1>
           <div className="flex items-center gap-2">
             {/* View Toggle */}
             <div className="bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 p-1">
               <button
-                onClick={() => setViewType(VIEW_TYPES.GRID)}
+                onClick={() => setViewType('grid')}
                 className={`p-2 rounded-md transition-colors ${
-                  viewType === VIEW_TYPES.GRID
+                  viewType === 'grid'
                     ? 'bg-primary-500 text-white'
                     : 'text-dark-400 hover:text-white'
                 }`}
@@ -169,9 +131,9 @@ function MyItems() {
                 </svg>
               </button>
               <button
-                onClick={() => setViewType(VIEW_TYPES.TABLE)}
+                onClick={() => setViewType('table')}
                 className={`p-2 rounded-md transition-colors ${
-                  viewType === VIEW_TYPES.TABLE
+                  viewType === 'table'
                     ? 'bg-primary-500 text-white'
                     : 'text-dark-400 hover:text-white'
                 }`}
@@ -181,19 +143,12 @@ function MyItems() {
                 </svg>
               </button>
             </div>
-            
-          <button
-            onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-          >
-            Add Item
-          </button>
           </div>
         </div>
 
         {/* Search and Filters */}
         <div className="grid grid-cols-12 gap-4">
-          {/* Search - wider */}
+          {/* Search */}
           <div className="col-span-12 lg:col-span-4">
             <div className="relative">
               <input
@@ -219,7 +174,7 @@ function MyItems() {
             </div>
           </div>
 
-          {/* Filters - shorter and grouped */}
+          {/* Filters */}
           <div className="col-span-12 lg:col-span-7">
             <div className="flex flex-wrap gap-4">
               {/* Status Filter */}
@@ -228,19 +183,9 @@ function MyItems() {
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="w-full px-3 py-1.5 bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 text-white focus:outline-none focus:border-primary-500/50 appearance-none cursor-pointer text-sm"
-                  style={{ 
-                    WebkitAppearance: 'none',
-                    MozAppearance: 'none' 
-                  }}
                 >
                   {FILTER_OPTIONS.STATUS.map(option => (
-                    <option 
-                      key={option.value} 
-                      value={option.value}
-                      className="bg-dark-800 text-white"
-                    >
-                      {option.label}
-                    </option>
+                    <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-dark-400">
@@ -256,19 +201,9 @@ function MyItems() {
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="w-full px-3 py-1.5 bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 text-white focus:outline-none focus:border-primary-500/50 appearance-none cursor-pointer text-sm"
-                  style={{ 
-                    WebkitAppearance: 'none',
-                    MozAppearance: 'none' 
-                  }}
                 >
                   {FILTER_OPTIONS.CATEGORY.map(option => (
-                    <option 
-                      key={option.value} 
-                      value={option.value}
-                      className="bg-dark-800 text-white"
-                    >
-                      {option.label}
-                    </option>
+                    <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-dark-400">
@@ -284,19 +219,9 @@ function MyItems() {
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="w-full px-3 py-1.5 bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 text-white focus:outline-none focus:border-primary-500/50 appearance-none cursor-pointer text-sm"
-                  style={{ 
-                    WebkitAppearance: 'none',
-                    MozAppearance: 'none' 
-                  }}
                 >
                   {FILTER_OPTIONS.SORT.map(option => (
-                    <option 
-                      key={option.value} 
-                      value={option.value}
-                      className="bg-dark-800 text-white"
-                    >
-                      {option.label}
-                    </option>
+                    <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-dark-400">
@@ -308,7 +233,7 @@ function MyItems() {
             </div>
           </div>
 
-          {/* Clear Filters Button */}
+          {/* Clear Filters */}
           <div className="col-span-12 lg:col-span-1 flex items-start">
             <button
               onClick={clearFilters}
@@ -322,14 +247,18 @@ function MyItems() {
 
         {/* Items Display */}
         {loading ? (
-          <div>Loading...</div>
+          <div className="text-center py-12">
+            <div className="text-dark-400">Loading items...</div>
+          </div>
         ) : error ? (
-          <div className="text-red-400">{error}</div>
+          <div className="text-center py-12">
+            <div className="text-red-400">{error}</div>
+          </div>
         ) : filteredItems.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-dark-400">No items found</p>
+            <div className="text-dark-400">No items found</div>
           </div>
-        ) : viewType === VIEW_TYPES.GRID ? (
+        ) : viewType === 'grid' ? (
           // Grid View
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map(item => (
@@ -337,27 +266,34 @@ function MyItems() {
                 key={item._id}
                 className="bg-dark-800/30 backdrop-blur-xl rounded-2xl border border-dark-700/50 overflow-hidden hover:border-primary-500/20 transition-all duration-300"
               >
-                {/* Image Container */}
+                {/* Image */}
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-dark-900/50">
                   <img
                     src={processedImages[item.images[0]] || item.images[0]}
-                  alt={item.name}
+                    alt={item.name}
                     className="absolute inset-0 w-full h-full object-cover"
                     loading="lazy"
-                    onError={(e) => {
-                      e.target.src = item.images[0]; // Fallback to original image
-                    }}
                   />
-                  {!processedImages[item.images[0]] && (
-                    <div className="absolute inset-0 bg-dark-900/50 animate-pulse" />
-                  )}
-              </div>
+                </div>
 
                 {/* Content */}
                 <div className="p-6">
-                  <h3 className="text-lg font-medium text-white">{item.name}</h3>
-                  <p className="mt-1 text-dark-300 line-clamp-2 text-sm">{item.description}</p>
-                  
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium text-white">{item.name}</h3>
+                      <p className="text-sm text-dark-400">by {item.owner.name}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      item.status === 'available' 
+                        ? 'bg-green-500/10 text-green-400'
+                        : 'bg-yellow-500/10 text-yellow-400'
+                    }`}>
+                      {item.status}
+                    </span>
+                  </div>
+
+                  <p className="mt-2 text-dark-300 line-clamp-2 text-sm">{item.description}</p>
+
                   <div className="mt-4 flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <span className="text-xl font-semibold text-primary-400">
@@ -367,46 +303,36 @@ function MyItems() {
                         /{item.period}
                       </span>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    item.status === 'available'
-                      ? 'bg-green-500/10 text-green-400'
-                      : 'bg-yellow-500/10 text-yellow-400'
-                  }`}>
-                      {item.status}
-                  </span>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-dark-700/50 flex gap-3">
+                  <div className="mt-4 pt-4 border-t border-dark-700/50 space-y-3">
                     <Link
-                      to={`/items/${item._id}`}
-                      className="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-dark-700/50 rounded-xl hover:bg-primary-500 transition-all duration-300"
+                      to={`/browse/${item._id}`}
+                      className="w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-dark-700/50 rounded-xl hover:bg-primary-500 transition-all duration-300"
                     >
                       View Details
+                      <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </Link>
-                    <button
-                      onClick={() => {
-                        setSelectedItem(item);
-                        setShowEditModal(true);
-                      }}
-                      className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-dark-700/50 rounded-xl hover:bg-primary-500 transition-all duration-300"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      <span className="ml-2">Edit</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setItemToDelete(item);
-                        setShowDeleteModal(true);
-                      }}
-                      className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-red-500/20 rounded-xl hover:bg-red-500 transition-all duration-300"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      <span className="ml-2">Delete</span>
-                    </button>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setShowBookingModal(true);
+                        }}
+                        disabled={item.status !== 'available'}
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-primary-500 rounded-xl hover:bg-primary-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Book Now
+                      </button>
+                      <Link
+                        to="/messages"
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-dark-700/50 rounded-xl hover:bg-dark-600 transition-all duration-300"
+                      >
+                        Enquire
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -429,7 +355,7 @@ function MyItems() {
                 {filteredItems.map(item => (
                   <tr key={item._id} className="hover:bg-dark-700/30 transition-colors">
                     <td className="px-6 py-4">
-                    <div className="flex items-center">
+                      <div className="flex items-center">
                         <div className="h-10 w-10 flex-shrink-0">
                           <img
                             src={processedImages[item.images[0]] || item.images[0]}
@@ -439,8 +365,8 @@ function MyItems() {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-white">{item.name}</div>
-                          <div className="text-sm text-dark-400 truncate max-w-xs">{item.description}</div>
-                      </div>
+                          <div className="text-sm text-dark-400">by {item.owner.name}</div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -459,7 +385,7 @@ function MyItems() {
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end space-x-2">
                         <Link
-                          to={`/items/${item._id}`}
+                          to={`/browse/${item._id}`}
                           className="px-3 py-1.5 text-xs font-medium bg-dark-700/50 text-white rounded-lg hover:bg-primary-500 transition-colors"
                         >
                           View
@@ -467,58 +393,35 @@ function MyItems() {
                         <button
                           onClick={() => {
                             setSelectedItem(item);
-                            setShowEditModal(true);
+                            setShowBookingModal(true);
                           }}
-                          className="px-3 py-1.5 text-xs font-medium bg-dark-700/50 text-white rounded-lg hover:bg-primary-500 transition-colors"
+                          disabled={item.status !== 'available'}
+                          className="px-3 py-1.5 text-xs font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Edit
+                          Book
                         </button>
-                        <button
-                          onClick={() => {
-                            setItemToDelete(item);
-                            setShowDeleteModal(true);
-                          }}
-                          className="px-3 py-1.5 text-xs font-medium bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
+                        <Link
+                          to="/messages"
+                          className="px-3 py-1.5 text-xs font-medium bg-dark-700/50 text-white rounded-lg hover:bg-dark-600 transition-colors"
                         >
-                          Delete
-                        </button>
+                          Enquire
+                        </Link>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-                  </div>
-                )}
+          </div>
+        )}
       </div>
 
-      <AddItemModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onItemAdded={handleItemAdded}
-      />
-
-      <EditItemModal
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setSelectedItem(null);
-        }}
+      {/* BookingModal component */}
+      <BookingModal
+        isOpen={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
         item={selectedItem}
-        onItemUpdated={handleItemUpdated}
-      />
-
-      <DeleteConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setItemToDelete(null);
-        }}
-        onConfirm={handleDelete}
-        loading={deleteLoading}
       />
     </DashboardLayout>
   );
 } 
-
-export default MyItems; 
