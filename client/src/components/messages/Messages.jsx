@@ -83,7 +83,7 @@ export default function Messages() {
             <div className="p-4 border-b border-dark-700/50">
               <h2 className="text-lg font-semibold text-white">Messages</h2>
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
               <ul className="divide-y divide-dark-700/50">
                 {chats.map((chat) => (
                   <li
@@ -155,7 +155,7 @@ export default function Messages() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {selectedChat.messages.map((message) => (
                   <div
                     key={message.id}
