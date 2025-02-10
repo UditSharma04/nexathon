@@ -4,6 +4,11 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Home from './components/Home';
 import Landing from './components/landing/Landing';
+import Items from './components/items/Items';
+import ItemDetail from './components/items/ItemDetail';
+import Profile from './components/profile/Profile';
+import Bookings from './components/bookings/Bookings';
+import Messages from './components/messages/Messages';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function AuthenticatedRoute() {
@@ -16,9 +21,12 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<AuthenticatedRoute />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Protected routes */}
           <Route
             path="/home"
             element={
@@ -27,6 +35,49 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/items"
+            element={
+              <ProtectedRoute>
+                <Items />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/items/:id"
+            element={
+              <ProtectedRoute>
+                <ItemDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookings"
+            element={
+              <ProtectedRoute>
+                <Bookings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>

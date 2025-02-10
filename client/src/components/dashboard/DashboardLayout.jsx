@@ -74,7 +74,29 @@ export default function DashboardLayout({ children }) {
           </nav>
 
           {/* User menu */}
-          <div className="border-t border-dark-700/50 p-4">
+          <div className="border-t border-dark-700/50 p-4 space-y-2">
+            <Link
+              to="/profile"
+              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                location.pathname === '/profile'
+                  ? 'bg-primary-500/10 text-primary-400'
+                  : 'text-dark-300 hover:bg-dark-800 hover:text-white'
+              }`}
+            >
+              <svg 
+                className={`mr-3 h-6 w-6 ${
+                  location.pathname === '/profile' 
+                    ? 'text-primary-400' 
+                    : 'text-dark-400 group-hover:text-white'
+                }`}
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Profile
+            </Link>
             <button
               onClick={logout}
               className="w-full flex items-center px-4 py-3 text-sm font-medium text-dark-300 rounded-xl hover:bg-dark-800 hover:text-white transition-colors"
