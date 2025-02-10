@@ -12,11 +12,14 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// VIT Chennai coordinates
-const VIT_CHENNAI = {
-  lat: 12.8406,
-  lng: 80.1534
+// Default coordinates (will be updated with IP location)
+const DEFAULT_LOCATION = {
+  lat: 0,
+  lng: 0
 };
+
+// Stadia Maps Dark style with brighter text
+const DARK_MAP_STYLE = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?textColor=ffffff&textHaloColor=000000&textHaloWidth=1.2';
 
 // Component to handle map center updates
 function MapCenter({ center }) {
@@ -28,12 +31,99 @@ function MapCenter({ center }) {
 }
 
 export default function Map() {
-  const [center, setCenter] = useState(VIT_CHENNAI);
+  const [center, setCenter] = useState(DEFAULT_LOCATION);
   const [loading, setLoading] = useState(true);
   const [showLocationInput, setShowLocationInput] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [locationName, setLocationName] = useState('');
+
+  useEffect(() => {
+    async function getLocation() {
+      setLoading(true);
+
+      // Check if geolocation is supported
+      if (!navigator.geolocation) {
+        console.error('Geolocation is not supported by your browser');
+        fallbackToIP();
+        return;
+      }
+
+      // Request permission explicitly
+      try {
+        const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+        
+        if (permissionStatus.state === 'denied') {
+          console.log('Location permission denied');
+          fallbackToIP();
+          return;
+        }
+
+        // Get position with shorter timeout
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            setCenter({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            });
+
+            try {
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1`
+              );
+              const data = await response.json();
+              setLocationName(data.display_name);
+            } catch (error) {
+              console.error('Reverse geocoding error:', error);
+            }
+            setLoading(false);
+          },
+          (error) => {
+            console.error('Position error:', error);
+            fallbackToIP();
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+          }
+        );
+
+      } catch (error) {
+        console.error('Permission error:', error);
+        fallbackToIP();
+      }
+    }
+
+    // IP fallback function
+    async function fallbackToIP() {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        
+        if (data.latitude && data.longitude) {
+          setCenter({
+            lat: data.latitude,
+            lng: data.longitude
+          });
+          setLocationName(`${data.city}, ${data.region}, ${data.country_name}`);
+        }
+      } catch (error) {
+        console.error('IP location error:', error);
+        // Set a default location if everything fails
+        setCenter({
+          lat: 12.8406, // Default coordinates
+          lng: 80.1534
+        });
+        setLocationName('Default Location');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getLocation();
+  }, []);
 
   const searchLocation = async (query) => {
     if (!query.trim()) return;
@@ -63,16 +153,11 @@ export default function Map() {
     setSearchQuery('');
   };
 
-  useEffect(() => {
-    // Just set loading to false since we're not fetching any data
-    setLoading(false);
-  }, []);
-
   if (loading) {
     return (
       <DashboardLayout>
         <div className="h-[calc(100vh-2rem)] bg-dark-800/30 backdrop-blur-xl rounded-2xl border border-dark-700/50 flex items-center justify-center">
-          <div className="text-white">Loading map...</div>
+          <div className="text-white">Detecting your location...</div>
         </div>
       </DashboardLayout>
     );
@@ -158,21 +243,23 @@ export default function Map() {
           center={[center.lat, center.lng]}
           zoom={13}
           className="h-full w-full z-0"
-          style={{ background: '#242424' }}
+          style={{ background: '#1a1a1a' }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+            url={DARK_MAP_STYLE}
+            className="map-tiles"
           />
           
           <MapCenter center={[center.lat, center.lng]} />
           
           {/* Current location marker */}
           <Marker position={[center.lat, center.lng]}>
-            <Popup>
-              <div className="text-dark-900">
-                <h3 className="font-semibold">Your Location</h3>
-                <p className="text-xs text-dark-500">
+            <Popup className="dark-popup">
+              <div className="bg-dark-800/95 p-3 rounded-lg">
+                <h3 className="font-semibold text-white">Your Location</h3>
+                <p className="text-sm text-white mb-1">{locationName}</p>
+                <p className="text-xs text-dark-300">
                   {center.lat.toFixed(6)}, {center.lng.toFixed(6)}
                 </p>
               </div>
