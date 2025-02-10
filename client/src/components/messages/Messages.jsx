@@ -6,12 +6,66 @@ import { socketService } from '../../utils/socket';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  
+  return date.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 export default function Messages() {
   const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+
+  useEffect(() => {
+    if (token) {
+      socketService.connect(token);
+    }
+    return () => socketService.disconnect();
+  }, [token]);
+
+  // Listen for new conversations
+  useEffect(() => {
+    const handleNewConversation = (conversation) => {
+      console.log('New conversation received in Messages:', conversation);
+      setConversations(prev => {
+        // Check if conversation already exists
+        const exists = prev.some(conv => conv._id === conversation._id);
+        if (exists) return prev;
+
+        // Format the new conversation
+        const otherParticipant = conversation.participants.find(
+          p => p._id !== user._id
+        );
+
+        const formattedConversation = {
+          _id: conversation._id,
+          otherUser: otherParticipant || {
+            _id: 'unknown',
+            name: 'Unknown User',
+            email: 'unknown'
+          },
+          item: conversation.item,
+          lastMessage: conversation.lastMessage,
+          messages: conversation.messages,
+          updatedAt: conversation.updatedAt || new Date()
+        };
+
+        return [formattedConversation, ...prev];
+      });
+    };
+
+    const cleanup = socketService.onNewConversation(handleNewConversation);
+    return () => cleanup();
+  }, [user._id]);
 
   useEffect(() => {
     fetchConversations();
@@ -31,37 +85,45 @@ export default function Messages() {
   const fetchConversations = async () => {
     try {
       const response = await api.get('/api/conversations');
-      console.log('Raw conversations:', response.data); // Debug log
+      console.log('Raw conversations:', response.data);
       
       const formattedConversations = response.data.map(conv => {
-        // Debug log
-        console.log('Current user:', user);
-        console.log('Conversation participants:', conv.participants);
-
-        // Find the other participant (not the current user)
         const otherParticipant = conv.participants.find(
-          p => p._id.toString() !== user?.id // Changed from user._id to user?.id
+          p => p._id !== user._id
         );
         
+        if (!otherParticipant) {
+          console.error('Could not find other participant', {
+            currentUser: user,
+            participants: conv.participants
+          });
+        }
+
         return {
           _id: conv._id,
-          otherUser: {
-            _id: otherParticipant?._id,
-            name: otherParticipant?.name || 'Unknown User',
-            email: otherParticipant?.email
+          otherUser: otherParticipant || {
+            _id: 'unknown',
+            name: 'Unknown User',
+            email: 'unknown'
           },
           item: conv.item,
           lastMessage: conv.lastMessage,
-          messages: conv.messages
+          messages: conv.messages,
+          updatedAt: conv.updatedAt || new Date()
         };
       });
 
-      console.log('Formatted conversations:', formattedConversations); // Debug log
+      // Sort conversations by updatedAt
+      formattedConversations.sort((a, b) => 
+        new Date(b.updatedAt) - new Date(a.updatedAt)
+      );
+
+      console.log('Formatted conversations:', formattedConversations);
       setConversations(formattedConversations);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching conversations:', error);
-      console.error('User object:', user); // Debug log
+      console.error('User object:', user);
       setLoading(false);
     }
   };
@@ -75,6 +137,7 @@ export default function Messages() {
             <div className="p-4 border-b border-dark-700/50">
               <h2 className="text-lg font-semibold text-white">Messages</h2>
             </div>
+
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {loading ? (
                 <div className="flex items-center justify-center h-full">
@@ -98,9 +161,6 @@ export default function Messages() {
                                 {conversation.otherUser.name.charAt(0)}
                               </span>
                             </div>
-                            {conversation.otherUser.online && (
-                              <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-400 ring-2 ring-dark-800" />
-                            )}
                           </div>
                           <div className="ml-4 flex-1">
                             <div className="flex items-center justify-between">
@@ -109,10 +169,7 @@ export default function Messages() {
                               </h3>
                               {conversation.lastMessage && (
                                 <p className="text-xs text-dark-400">
-                                  {new Date(conversation.lastMessage.createdAt).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
+                                  {formatDate(conversation.lastMessage.createdAt)}
                                 </p>
                               )}
                             </div>
@@ -151,9 +208,6 @@ export default function Messages() {
                           {selectedChat.otherUser.name.charAt(0)}
                         </span>
                       </div>
-                      {selectedChat.otherUser.online && (
-                        <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-dark-800" />
-                      )}
                     </div>
                     <div className="ml-3">
                       <h3 className="text-sm font-medium text-white">
@@ -170,7 +224,7 @@ export default function Messages() {
               </div>
 
               {/* Chat Component */}
-              <Chat selectedChat={selectedChat} />
+              <Chat selectedChat={selectedChat} onNewMessage={fetchConversations} />
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
@@ -197,4 +251,4 @@ export default function Messages() {
       </div>
     </DashboardLayout>
   );
-} 
+}

@@ -1,15 +1,20 @@
 import express from 'express';
-import { auth } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { getUserProfile } from '../controllers/userController.js';
 import User from '../models/User.js';
 
 const router = express.Router();
 
-router.get('/nearby', auth, async (req, res, next) => {
+// Get user profile with items and stats
+router.get('/profile', authenticateToken, getUserProfile);
+
+// Get nearby users
+router.get('/nearby', authenticateToken, async (req, res, next) => {
   try {
     const { longitude, latitude, radius = 50 } = req.query;
 
     const nearbyUsers = await User.find({
-      _id: { $ne: req.user._id }, // Exclude current user
+      _id: { $ne: req.user.id }, // Exclude current user
       location: {
         $near: {
           $geometry: {
@@ -27,4 +32,4 @@ router.get('/nearby', auth, async (req, res, next) => {
   }
 });
 
-export default router; 
+export default router;

@@ -14,7 +14,8 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import Map from './components/map/Map';
 import BrowseItems from './components/browse/BrowseItems';
 import BrowseItemDetail from './components/browse/BrowseItemDetail';
-
+import BookingRequests from './components/bookings/BookingRequests';
+import BookingInfo from './components/bookings/BookingInfo';
 function AuthenticatedRoute() {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Navigate to="/home" /> : <Landing />;
@@ -80,6 +81,14 @@ function App() {
             }
           />
           <Route
+            path="/booking_req"
+            element={
+              <ProtectedRoute>
+                <BookingRequests />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/messages"
             element={
               <ProtectedRoute>
@@ -111,7 +120,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/booking_info"
+            element={
+              <ProtectedRoute>
+                <BookingInfo />
+              </ProtectedRoute>
+            }
+          />
           {/* Catch all route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
