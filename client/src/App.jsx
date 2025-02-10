@@ -5,6 +5,7 @@ import Register from './components/auth/Register';
 import Home from './components/Home';
 import Landing from './components/landing/Landing';
 import Items from './components/items/Items';
+import MyItems from './components/items/MyItems';
 import ItemDetail from './components/items/ItemDetail';
 import Profile from './components/profile/Profile';
 import Bookings from './components/bookings/Bookings';
@@ -48,6 +49,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ItemDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-items"
+            element={
+              <ProtectedRoute>
+                <MyItems />
               </ProtectedRoute>
             }
           />
