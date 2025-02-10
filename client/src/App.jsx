@@ -3,11 +3,12 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Home from './components/Home';
+import Landing from './components/landing/Landing';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function AuthenticatedRoute() {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Navigate to="/home" /> : <Navigate to="/login" />;
+  return isAuthenticated ? <Navigate to="/home" /> : <Landing />;
 }
 
 function App() {
