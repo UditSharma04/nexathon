@@ -12,4 +12,10 @@ export default defineConfig({
       },
     },
   },
+  optimizeDeps: {
+    include: ['leaflet', 'react-leaflet'],
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
 })

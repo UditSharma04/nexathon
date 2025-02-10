@@ -11,6 +11,7 @@ import Profile from './components/profile/Profile';
 import Bookings from './components/bookings/Bookings';
 import Messages from './components/messages/Messages';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import Map from './components/map/Map';
 
 function AuthenticatedRoute() {
   const { isAuthenticated } = useAuth();
@@ -81,6 +82,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Messages />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/map"
+            element={
+              <ProtectedRoute>
+                <Map />
               </ProtectedRoute>
             }
           />
