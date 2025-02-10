@@ -22,10 +22,10 @@ export const authAPI = {
 };
 
 export const itemsAPI = {
-  create: (itemData) => api.post('/api/items', itemData),
-  getMyItems: () => api.get('/api/items/my-items'),
-  getItem: (id) => api.get(`/api/items/${id}`),
-  getAllItems: () => api.get('/api/items/browseItems'),
-  updateItem: (id, itemData) => api.put(`/api/items/${id}`, itemData),
-  deleteItem: (id) => api.delete(`/api/items/${id}`),
+  create: (itemData) => axios.post('/api/items', itemData),
+  getMyItems: () => axios.get('/api/items/my-items'),
+  getItem: (id) => axios.get(`/api/items/${id}`),
+  getAllItems: () => axios.get('/api/items/browseItems'),
+  updateItem: (id, itemData) => axios.put(`/api/items/${id}`, itemData),
+  deleteItem: (id) => axios.delete(`/api/items/${id}`),
 }; 
