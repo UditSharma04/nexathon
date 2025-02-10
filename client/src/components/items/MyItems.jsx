@@ -149,347 +149,187 @@ function MyItems() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header with Search and Add Button */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-2xl font-bold text-white">My Items</h1>
-          <div className="flex items-center gap-2">
-            {/* View Toggle */}
-            <div className="bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 p-1">
-              <button
-                onClick={() => setViewType(VIEW_TYPES.GRID)}
-                className={`p-2 rounded-md transition-colors ${
-                  viewType === VIEW_TYPES.GRID
-                    ? 'bg-primary-500 text-white'
-                    : 'text-dark-400 hover:text-white'
-                }`}
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewType(VIEW_TYPES.TABLE)}
-                className={`p-2 rounded-md transition-colors ${
-                  viewType === VIEW_TYPES.TABLE
-                    ? 'bg-primary-500 text-white'
-                    : 'text-dark-400 hover:text-white'
-                }`}
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-              </button>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col gap-8">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-white">My Items</h1>
+              <p className="text-dark-400 mt-1">Manage your listed items and track their status</p>
             </div>
-            
-          <button
-            onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-          >
-            Add Item
-          </button>
-          </div>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="grid grid-cols-12 gap-4">
-          {/* Search - wider */}
-          <div className="col-span-12 lg:col-span-4">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search items..."
-                className="w-full px-4 py-2 bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 text-white placeholder-dark-400 focus:outline-none focus:border-primary-500/50"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-10 top-2.5 text-dark-400 hover:text-white"
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-              <svg className="absolute right-3 top-2.5 h-5 w-5 text-dark-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Filters - shorter and grouped */}
-          <div className="col-span-12 lg:col-span-7">
-            <div className="flex flex-wrap gap-4">
-              {/* Status Filter */}
-              <div className="relative flex-1 min-w-[140px]">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 text-white focus:outline-none focus:border-primary-500/50 appearance-none cursor-pointer text-sm"
-                  style={{ 
-                    WebkitAppearance: 'none',
-                    MozAppearance: 'none' 
-                  }}
-                >
-                  {FILTER_OPTIONS.STATUS.map(option => (
-                    <option 
-                      key={option.value} 
-                      value={option.value}
-                      className="bg-dark-800 text-white"
-                    >
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-dark-400">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Category Filter */}
-              <div className="relative flex-1 min-w-[140px]">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 text-white focus:outline-none focus:border-primary-500/50 appearance-none cursor-pointer text-sm"
-                  style={{ 
-                    WebkitAppearance: 'none',
-                    MozAppearance: 'none' 
-                  }}
-                >
-                  {FILTER_OPTIONS.CATEGORY.map(option => (
-                    <option 
-                      key={option.value} 
-                      value={option.value}
-                      className="bg-dark-800 text-white"
-                    >
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-dark-400">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Sort By */}
-              <div className="relative flex-1 min-w-[140px]">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 text-white focus:outline-none focus:border-primary-500/50 appearance-none cursor-pointer text-sm"
-                  style={{ 
-                    WebkitAppearance: 'none',
-                    MozAppearance: 'none' 
-                  }}
-                >
-                  {FILTER_OPTIONS.SORT.map(option => (
-                    <option 
-                      key={option.value} 
-                      value={option.value}
-                      className="bg-dark-800 text-white"
-                    >
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-dark-400">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Clear Filters Button */}
-          <div className="col-span-12 lg:col-span-1 flex items-start">
             <button
-              onClick={clearFilters}
-              className="px-3 py-1.5 text-sm text-dark-400 hover:text-white transition-colors rounded-lg border border-dark-700/50 hover:border-primary-500/50"
-              title="Clear all filters"
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors"
             >
-              Clear
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add New Item
             </button>
           </div>
-        </div>
 
-        {/* Items Display */}
-        {loading ? (
-          <div>Loading...</div>
-        ) : error ? (
-          <div className="text-red-400">{error}</div>
-        ) : filteredItems.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-dark-400">No items found</p>
-          </div>
-        ) : viewType === VIEW_TYPES.GRID ? (
-          // Grid View
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map(item => (
-              <div
-                key={item._id}
-                className="bg-dark-800/30 backdrop-blur-xl rounded-2xl border border-dark-700/50 overflow-hidden hover:border-primary-500/20 transition-all duration-300"
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full bg-dark-800 border border-dark-700/50 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 p-2.5"
               >
-                {/* Image Container */}
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-dark-900/50">
-                  <img
-                    src={processedImages[item.images[0]] || item.images[0]}
-                  alt={item.name}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.src = item.images[0]; // Fallback to original image
-                    }}
-                  />
-                  {!processedImages[item.images[0]] && (
-                    <div className="absolute inset-0 bg-dark-900/50 animate-pulse" />
-                  )}
-              </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-lg font-medium text-white">{item.name}</h3>
-                  <p className="mt-1 text-dark-300 line-clamp-2 text-sm">{item.description}</p>
-                  
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xl font-semibold text-primary-400">
-                        ${item.price}
-                      </span>
-                      <span className="text-sm text-dark-400">
-                        /{item.period}
-                      </span>
-                    </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    item.status === 'available'
-                      ? 'bg-green-500/10 text-green-400'
-                      : 'bg-yellow-500/10 text-yellow-400'
-                  }`}>
-                      {item.status}
-                  </span>
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-dark-700/50 flex gap-3">
-                    <Link
-                      to={`/items/${item._id}`}
-                      className="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-dark-700/50 rounded-xl hover:bg-primary-500 transition-all duration-300"
-                    >
-                      View Details
-                    </Link>
-                    <button
-                      onClick={() => {
-                        setSelectedItem(item);
-                        setShowEditModal(true);
-                      }}
-                      className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-dark-700/50 rounded-xl hover:bg-primary-500 transition-all duration-300"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      <span className="ml-2">Edit</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setItemToDelete(item);
-                        setShowDeleteModal(true);
-                      }}
-                      className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-red-500/20 rounded-xl hover:bg-red-500 transition-all duration-300"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      <span className="ml-2">Delete</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+                <option value="" className="bg-dark-800">All Status</option>
+                <option value="available" className="bg-dark-800">Available</option>
+                <option value="booked" className="bg-dark-800">Booked</option>
+              </select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full bg-dark-800 border border-dark-700/50 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 p-2.5"
+              >
+                <option value="newest" className="bg-dark-800">Newest First</option>
+                <option value="oldest" className="bg-dark-800">Oldest First</option>
+                <option value="price_low" className="bg-dark-800">Price: Low to High</option>
+                <option value="price_high" className="bg-dark-800">Price: High to Low</option>
+              </select>
+            </div>
           </div>
-        ) : (
-          // Table View
-          <div className="bg-dark-800/30 backdrop-blur-xl rounded-2xl border border-dark-700/50 overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-dark-700/50">
-                  <th className="px-6 py-4 text-left text-sm font-medium text-dark-300">Item</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-dark-300">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-dark-300">Category</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-dark-300">Price</th>
-                  <th className="px-6 py-4 text-right text-sm font-medium text-dark-300">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-dark-700/50">
-                {filteredItems.map(item => (
-                  <tr key={item._id} className="hover:bg-dark-700/30 transition-colors">
-                    <td className="px-6 py-4">
-                    <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
-                          <img
-                            src={processedImages[item.images[0]] || item.images[0]}
-                            alt={item.name}
-                            className="h-10 w-10 rounded-lg object-cover"
-                          />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-white">{item.name}</div>
-                          <div className="text-sm text-dark-400 truncate max-w-xs">{item.description}</div>
+
+          {/* Items Grid */}
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="space-y-4 text-center">
+                <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <div className="text-dark-400 animate-pulse">Loading your items...</div>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="space-y-4 text-center">
+                <div className="text-4xl">😕</div>
+                <div className="text-red-400">{error}</div>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="px-4 py-2 text-sm bg-dark-800/50 hover:bg-dark-700/50 text-white rounded-lg transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-16 h-16 bg-dark-800/50 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-dark-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-white mb-2">No items found</h3>
+              <p className="text-dark-400 mb-6">Start by adding your first item for rent</p>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center px-4 py-2 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add New Item
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredItems.map((item, index) => (
+                <div
+                  key={item._id}
+                  className="group bg-dark-800/30 backdrop-blur-xl rounded-xl border border-dark-700/50 overflow-hidden hover:border-primary-500/20 transition-all duration-300"
+                  style={{
+                    animation: `fadeIn 0.5s ease-out ${index * 0.1}s both`
+                  }}
+                >
+                  {/* Image */}
+                  <div className="relative h-48 w-full overflow-hidden bg-dark-900">
+                    {item.images?.[0] ? (
+                      <>
+                        {!processedImages[item.images[0]] && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-dark-900">
+                            <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                          </div>
+                        )}
+                        <img
+                          src={processedImages[item.images[0]] || item.images[0]}
+                          alt={item.name}
+                          className={`h-full w-full object-cover ${
+                            processedImages[item.images[0]] ? 'opacity-100' : 'opacity-0'
+                          }`}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.target.src = item.images[0]; // Fallback to original image
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-dark-900">
+                        <svg className="w-12 h-12 text-dark-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-medium text-white truncate">{item.name}</h3>
+                        <p className="text-sm text-dark-400 truncate">Added {item.createdAt}</p>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        item.status === 'available'
-                          ? 'bg-green-500/10 text-green-400'
-                          : 'bg-yellow-500/10 text-yellow-400'
+                      <span className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-medium ${
+                        item.status === 'available' 
+                          ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                          : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                       }`}>
                         {item.status}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-dark-300">{item.category}</td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-primary-400">${item.price}/{item.period}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Link
-                          to={`/items/${item._id}`}
-                          className="px-3 py-1.5 text-xs font-medium bg-dark-700/50 text-white rounded-lg hover:bg-primary-500 transition-colors"
-                        >
-                          View
-                        </Link>
-                        <button
-                          onClick={() => {
-                            setSelectedItem(item);
-                            setShowEditModal(true);
-                          }}
-                          className="px-3 py-1.5 text-xs font-medium bg-dark-700/50 text-white rounded-lg hover:bg-primary-500 transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            setItemToDelete(item);
-                            setShowDeleteModal(true);
-                          }}
-                          className="px-3 py-1.5 text-xs font-medium bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
-                        >
-                          Delete
-                        </button>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-lg font-medium text-primary-400">${item.price}</span>
+                        <span className="text-sm text-dark-400">/{item.period}</span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <div className="text-sm text-dark-400">
+                        {item.totalBookings || 0} bookings
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setShowEditModal(true);
+                        }}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-dark-700/50 rounded-lg hover:bg-primary-500 transition-colors"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          setItemToDelete(item);
+                          setShowDeleteModal(true);
+                        }}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-red-500/20 rounded-lg hover:bg-red-500 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <AddItemModal
