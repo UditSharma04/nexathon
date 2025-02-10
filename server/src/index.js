@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import itemRoutes from './routes/items.js';
+import conversationRoutes from './routes/conversations.js';
+import chatRoutes from './routes/chats.js';
 
 dotenv.config();
 
@@ -25,6 +27,8 @@ app.use(morgan('dev'));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/items', itemRoutes);
+app.use('/api/conversations', conversationRoutes);
+app.use('/api/chats', chatRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
