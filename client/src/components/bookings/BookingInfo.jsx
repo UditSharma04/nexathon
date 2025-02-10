@@ -238,109 +238,131 @@ export default function BookingInfo() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white">My Bookings</h1>
-            <p className="mt-1 text-sm text-dark-300">
-              View and manage your booking requests
-            </p>
-          </div>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-dark-800/50 border border-dark-700/50 text-dark-300 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2.5"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="accepted">Accepted</option>
-            <option value="declined">Declined</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-500">
-            {error}
-          </div>
-        )}
-
-        {/* No Bookings Message */}
-        {filteredBookings.length === 0 && !error && (
-          <div className="bg-dark-800/30 backdrop-blur-xl rounded-xl border border-dark-700/50 p-6 text-center">
-            <p className="text-dark-300">No bookings found</p>
-          </div>
-        )}
-
-        {/* Bookings List */}
-        <div className="grid gap-6">
-          {filteredBookings.map((booking) => (
-            <div
-              key={booking._id}
-              className="relative group bg-dark-800/30 backdrop-blur-xl rounded-xl border border-dark-700/50 p-6 hover:border-primary-500/20 transition-all duration-300"
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col gap-8">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-white">My Bookings</h1>
+              <p className="text-dark-400 mt-1">View and manage your booking requests</p>
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-dark-900 border border-dark-700/50 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2.5"
             >
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary-600 to-primary-500 rounded-xl blur opacity-0 group-hover:opacity-20 transition duration-300" />
-              <div className="relative">
-                <div className="flex items-start gap-6">
-                  {/* Item Image */}
-                  <div className="w-24 h-24 rounded-lg overflow-hidden bg-dark-900/50">
-                    <img
-                      src={booking.item.images[0]}
-                      alt={booking.item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+              <option value="all" className="bg-dark-900 text-white">All Status</option>
+              <option value="pending" className="bg-dark-900 text-white">Pending</option>
+              <option value="accepted" className="bg-dark-900 text-white">Accepted</option>
+              <option value="declined" className="bg-dark-900 text-white">Declined</option>
+              <option value="cancelled" className="bg-dark-900 text-white">Cancelled</option>
+            </select>
+          </div>
 
-                  {/* Booking Details */}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-medium text-white">
-                          {booking.item.name}
-                        </h3>
-                        <div className="mt-1 flex items-center gap-2">
-                          <span className="text-sm text-dark-300">Owner:</span>
-                          <span className="text-sm font-medium text-white">{booking.owner.name}</span>
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 backdrop-blur-xl rounded-xl p-4 text-red-400">
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {error}
+              </div>
+            </div>
+          )}
+
+          {/* No Bookings Message */}
+          {filteredBookings.length === 0 && !error && (
+            <div className="bg-dark-800/30 backdrop-blur-xl rounded-xl border border-dark-700/50 p-8">
+              <div className="flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-dark-800/50 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-white mb-2">No bookings found</h3>
+                <p className="text-dark-400">This booking request doesn't exist or has been removed</p>
+              </div>
+            </div>
+          )}
+
+          {/* Bookings List */}
+          <div className="grid gap-6">
+            {filteredBookings.map((booking) => (
+              <div
+                key={booking._id}
+                className="bg-dark-800/30 backdrop-blur-xl rounded-xl border border-dark-700/50 p-6"
+              >
+                <div className="relative">
+                  <div className="flex items-start gap-6">
+                    {/* Item Image */}
+                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-dark-900/50">
+                      {booking.item?.images?.[0] ? (
+                        <img
+                          src={booking.item.images[0]}
+                          alt={booking.item.name}
+                          className="w-full h-full object-contain bg-dark-900"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://via.placeholder.com/400x400?text=No+Image';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-dark-900">
+                          <svg className="w-8 h-8 text-dark-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Booking Details */}
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-lg font-medium text-white">
+                            {booking.item.name}
+                          </h3>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="text-sm text-dark-400">Owner:</span>
+                            <span className="text-sm font-medium text-white">{booking.owner.name}</span>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                        </span>
+                      </div>
+
+                      <p className="mt-3 text-sm text-dark-400">{booking.message}</p>
+
+                      <div className="mt-4 grid grid-cols-3 gap-6">
+                        <div>
+                          <span className="text-sm text-dark-400">Dates</span>
+                          <p className="mt-1 text-sm font-medium text-white">
+                            {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-dark-400">Amount</span>
+                          <p className="mt-1 text-sm font-medium text-white">
+                            ${booking.totalAmount.toFixed(2)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-dark-400">Requested On</span>
+                          <p className="mt-1 text-sm font-medium text-white">
+                            {new Date(booking.requestedAt).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                      </span>
+
+                      {booking.status === 'accepted' && renderBookingActions(booking)}
                     </div>
-
-                    <p className="mt-3 text-sm text-dark-300">{booking.message}</p>
-
-                    <div className="mt-4 grid grid-cols-3 gap-6">
-                      <div>
-                        <span className="text-sm text-dark-300">Dates</span>
-                        <p className="mt-1 text-sm font-medium text-white">
-                          {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-dark-300">Amount</span>
-                        <p className="mt-1 text-sm font-medium text-white">
-                          ${booking.totalAmount.toFixed(2)}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-dark-300">Requested On</span>
-                        <p className="mt-1 text-sm font-medium text-white">
-                          {new Date(booking.requestedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    {booking.status === 'accepted' && renderBookingActions(booking)}
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 

@@ -36,6 +36,7 @@ export default function BrowseItems() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [processedImages, setProcessedImages] = useState({});
+  const [loadedImages, setLoadedImages] = useState({});
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,7 +45,7 @@ export default function BrowseItems() {
   const [sortBy, setSortBy] = useState('newest');
 
   // View type state
-  const [viewType, setViewType] = useState('grid'); // 'grid' or 'table'
+  const [viewType, setViewType] = useState('grid');
 
   // Booking modal state
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -52,6 +53,11 @@ export default function BrowseItems() {
 
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Handle image load
+  const handleImageLoad = (imageUrl) => {
+    setLoadedImages(prev => ({ ...prev, [imageUrl]: true }));
+  };
 
   // Fetch items
   useEffect(() => {
@@ -204,17 +210,12 @@ export default function BrowseItems() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 text-white focus:outline-none focus:border-primary-500/50 appearance-none cursor-pointer text-sm"
+                  className="bg-dark-800 border border-dark-700/50 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
                 >
                   {FILTER_OPTIONS.STATUS.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
+                    <option key={option.value} value={option.value} className="bg-dark-800 text-white">{option.label}</option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-dark-400">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
               </div>
 
               {/* Category Filter */}
@@ -222,17 +223,12 @@ export default function BrowseItems() {
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 text-white focus:outline-none focus:border-primary-500/50 appearance-none cursor-pointer text-sm"
+                  className="bg-dark-800 border border-dark-700/50 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
                 >
                   {FILTER_OPTIONS.CATEGORY.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
+                    <option key={option.value} value={option.value} className="bg-dark-800 text-white">{option.label}</option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-dark-400">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
               </div>
 
               {/* Sort By */}
@@ -240,17 +236,12 @@ export default function BrowseItems() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-dark-800/30 backdrop-blur-xl rounded-lg border border-dark-700/50 text-white focus:outline-none focus:border-primary-500/50 appearance-none cursor-pointer text-sm"
+                  className="bg-dark-800 border border-dark-700/50 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
                 >
                   {FILTER_OPTIONS.SORT.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
+                    <option key={option.value} value={option.value} className="bg-dark-800 text-white">{option.label}</option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-dark-400">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
               </div>
             </div>
           </div>
@@ -269,93 +260,125 @@ export default function BrowseItems() {
 
         {/* Items Display */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="text-dark-400">Loading items...</div>
+          <div className="flex items-center justify-center py-20">
+            <div className="space-y-4 text-center">
+              <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <div className="text-dark-400 animate-pulse">Loading items...</div>
+            </div>
           </div>
         ) : error ? (
-          <div className="text-center py-12">
-            <div className="text-red-400">{error}</div>
+          <div className="flex items-center justify-center py-20">
+            <div className="space-y-4 text-center">
+              <div className="text-4xl">😕</div>
+              <div className="text-red-400">{error}</div>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-4 py-2 text-sm bg-dark-800/50 hover:bg-dark-700/50 text-white rounded-lg transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-dark-400">No items found</div>
+          <div className="flex items-center justify-center py-20">
+            <div className="space-y-4 text-center">
+              <div className="text-4xl">🔍</div>
+              <div className="text-dark-400">No items found</div>
+              <button 
+                onClick={clearFilters} 
+                className="px-4 py-2 text-sm bg-dark-800/50 hover:bg-dark-700/50 text-white rounded-lg transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
           </div>
         ) : viewType === 'grid' ? (
           // Grid View
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map(item => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredItems.map((item, index) => (
               <div
                 key={item._id}
-                className="bg-dark-800/30 backdrop-blur-xl rounded-2xl border border-dark-700/50 overflow-hidden hover:border-primary-500/20 transition-all duration-300"
+                className="group bg-dark-800/30 backdrop-blur-xl rounded-xl border border-dark-700/50 overflow-hidden hover:border-primary-500/20 transition-all duration-300"
               >
                 {/* Image */}
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-dark-900/50">
-                  <img
-                    src={processedImages[item.images[0]] || item.images[0]}
-                    alt={item.name}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                <div className="relative h-48 w-full overflow-hidden bg-dark-900">
+                  {item.images?.[0] ? (
+                    <>
+                      {!loadedImages[item.images[0]] && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-dark-900">
+                          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      <img
+                        src={processedImages[item.images[0]] || item.images[0]}
+                        alt={item.name}
+                        className={`h-full w-full object-cover ${
+                          loadedImages[item.images[0]] ? 'opacity-100' : 'opacity-0'
+                        }`}
+                        loading="lazy"
+                        onLoad={() => handleImageLoad(item.images[0])}
+                      />
+                    </>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-dark-900">
+                      <svg className="w-12 h-12 text-dark-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium text-white">{item.name}</h3>
-                      <p className="text-sm text-dark-400">by {item.owner.name}</p>
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-medium text-white truncate">{item.name}</h3>
+                      <p className="text-sm text-dark-400 truncate">by {item.owner.name}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <span className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-medium ${
                       item.status === 'available' 
-                        ? 'bg-green-500/10 text-green-400'
-                        : 'bg-yellow-500/10 text-yellow-400'
+                        ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                        : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                     }`}>
                       {item.status}
                     </span>
                   </div>
 
-                  <p className="mt-2 text-dark-300 line-clamp-2 text-sm">{item.description}</p>
+                  <p className="mt-2 text-dark-300 text-sm line-clamp-2">{item.description}</p>
 
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xl font-semibold text-primary-400">
-                        ${item.price}
-                      </span>
-                      <span className="text-sm text-dark-400">
-                        /{item.period}
-                      </span>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-lg font-medium text-primary-400">${item.price}</span>
+                      <span className="text-sm text-dark-400">/{item.period}</span>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-dark-700/50 space-y-3">
-                    <Link
-                      to={`/browse/${item._id}`}
-                      className="w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-dark-700/50 rounded-xl hover:bg-primary-500 transition-all duration-300"
-                    >
-                      View Details
-                      <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
-                    <div className="flex gap-3">
+                  <div className="mt-4 flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Link
+                        to={`/browse/${item._id}`}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-dark-700/50 rounded-lg hover:bg-primary-500 transition-colors"
+                      >
+                        View Details
+                      </Link>
                       <button
                         onClick={() => {
                           setSelectedItem(item);
                           setShowBookingModal(true);
                         }}
                         disabled={item.status !== 'available'}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-primary-500 rounded-xl hover:bg-primary-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Book Now
                       </button>
-                      <button
-                        onClick={() => handleEnquire(item)}
-                        disabled={item.owner._id === user?._id}
-                        className="mt-4 w-full px-4 py-2 text-sm font-medium text-white bg-primary-500 rounded-xl hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {item.owner._id === user?._id ? 'Your Item' : 'Enquire'}
-                      </button>
                     </div>
+                    <button
+                      onClick={() => handleEnquire(item)}
+                      disabled={item.owner._id === user?._id}
+                      className="w-full inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {item.owner._id === user?._id ? 'Your Item' : 'Enquire'}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -375,41 +398,73 @@ export default function BrowseItems() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-700/50">
-                {filteredItems.map(item => (
-                  <tr key={item._id} className="hover:bg-dark-700/30 transition-colors">
+                {filteredItems.map((item, index) => (
+                  <tr 
+                    key={item._id} 
+                    className="group hover:bg-dark-700/30 transition-colors"
+                    style={{
+                      animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`
+                    }}
+                  >
                     <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
-                          <img
-                            src={processedImages[item.images[0]] || item.images[0]}
-                            alt={item.name}
-                            className="h-10 w-10 rounded-lg object-cover"
-                          />
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 flex-shrink-0 rounded-lg overflow-hidden bg-dark-900">
+                          {item.images?.[0] ? (
+                            <>
+                              {!loadedImages[item.images[0]] && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-dark-900">
+                                  <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                              )}
+                              <img
+                                src={processedImages[item.images[0]] || item.images[0]}
+                                alt={item.name}
+                                className={`h-full w-full object-contain group-hover:scale-105 transition-all duration-300 ${
+                                  loadedImages[item.images[0]] ? 'opacity-100' : 'opacity-0'
+                                }`}
+                                loading="lazy"
+                                onLoad={() => handleImageLoad(item.images[0])}
+                              />
+                            </>
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center bg-dark-900">
+                              <svg className="w-6 h-6 text-dark-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-white">{item.name}</div>
+                        <div>
+                          <div className="text-sm font-medium text-white group-hover:text-primary-400 transition-colors">
+                            {item.name}
+                          </div>
                           <div className="text-sm text-dark-400">by {item.owner.name}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        item.status === 'available'
-                          ? 'bg-green-500/10 text-green-400'
-                          : 'bg-yellow-500/10 text-yellow-400'
+                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                        item.status === 'available' 
+                          ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                          : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                       }`}>
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-dark-300">{item.category}</td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-primary-400">${item.price}/{item.period}</div>
+                      <span className="text-sm text-dark-300 capitalize">{item.category}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end space-x-2">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-primary-400 font-medium">${item.price}</span>
+                        <span className="text-sm text-dark-400">/{item.period}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/browse/${item._id}`}
-                          className="px-3 py-1.5 text-xs font-medium bg-dark-700/50 text-white rounded-lg hover:bg-primary-500 transition-colors"
+                          className="inline-flex items-center px-3 py-1.5 text-sm text-white bg-dark-700/50 rounded-lg hover:bg-primary-500 transition-colors"
                         >
                           View
                         </Link>
@@ -419,16 +474,16 @@ export default function BrowseItems() {
                             setShowBookingModal(true);
                           }}
                           disabled={item.status !== 'available'}
-                          className="px-3 py-1.5 text-xs font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex items-center px-3 py-1.5 text-sm text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Book
                         </button>
                         <button
                           onClick={() => handleEnquire(item)}
                           disabled={item.owner._id === user?._id}
-                          className="px-3 py-1.5 text-xs font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex items-center px-3 py-1.5 text-sm text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Enquire
+                          {item.owner._id === user?._id ? 'Your Item' : 'Enquire'}
                         </button>
                       </div>
                     </td>
@@ -453,4 +508,4 @@ export default function BrowseItems() {
       )}
     </DashboardLayout>
   );
-} 
+}
