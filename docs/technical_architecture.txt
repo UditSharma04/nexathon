@@ -1,0 +1,33 @@
+TECHNICAL ARCHITECTURE
+
+1. Frontend Architecture
+   - React 18 with Vite
+   - State Management: Redux Toolkit
+   - Real-time Updates: Socket.io-client
+   - UI Components: Material UI / Tailwind CSS
+   - Maps: MapBox
+   - Forms: React Hook Form + Yup validation
+   - React Router v6 for routing
+   - Axios for API calls
+
+2. Backend Architecture
+   - Node.js with Express
+   - API Architecture: RESTful
+   - Real-time Server: Socket.io
+   - Task Queue: Bull with Redis
+   - File Storage: AWS S3
+   - JWT Authentication
+   - Express Middleware for validation
+
+3. Database Architecture
+   - Primary Database: MongoDB
+   - Cache Layer: Redis
+   - MongoDB Atlas Search for search functionality
+   - MongoDB Change Streams for real-time updates
+
+4. Infrastructure
+   - Deployment: Docker
+   - CI/CD: GitHub Actions
+   - Monitoring: MongoDB Atlas + PM2
+   - Logging: Winston + Morgan
+   - CDN: Cloudflare 

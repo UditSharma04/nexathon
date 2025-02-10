@@ -1,0 +1,36 @@
+API ENDPOINTS
+
+1. Authentication
+   POST /api/auth/register
+   POST /api/auth/login
+   POST /api/auth/refresh-token
+   POST /api/auth/logout
+
+2. Users
+   GET /api/users/profile
+   PUT /api/users/profile
+   GET /api/users/{id}/reputation
+   GET /api/users/{id}/items
+
+3. Items
+   POST /api/items
+   GET /api/items
+   GET /api/items/{id}
+   PUT /api/items/{id}
+   DELETE /api/items/{id}
+   GET /api/items/nearby
+   GET /api/items/search
+   GET /api/items/aggregate
+
+4. Bookings
+   POST /api/bookings
+   GET /api/bookings
+   GET /api/bookings/{id}
+   PUT /api/bookings/{id}/status
+   POST /api/bookings/{id}/review
+
+5. Communities
+   POST /api/communities
+   GET /api/communities
+   GET /api/communities/{id}
+   POST /api/communities/{id}/join 

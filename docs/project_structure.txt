@@ -1,0 +1,8 @@
+project_root/
+├── docs/
+│   ├── technical_architecture.txt
+│   ├── features.txt
+│   ├── implementation.txt
+│   ├── api_endpoints.txt
+│   ├── database_schema.txt
+│   └── security.txt 

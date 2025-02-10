@@ -1,0 +1,149 @@
+SHAREHUB - COMMUNITY RESOURCE SHARING PLATFORM
+
+Project Objective:
+"ShareHub is a community-driven platform that promotes sustainable consumption by enabling people to share resources, skills, and tools within their local communities, reducing waste and building stronger social connections."
+
+UN Sustainable Development Goals Targeted:
+- SDG 11: Sustainable Cities and Communities
+  * Making cities inclusive, safe, resilient and sustainable through resource sharing
+- SDG 12: Responsible Consumption and Production
+  * Reducing waste through shared economy principles
+- SDG 13: Climate Action
+  * Lowering carbon footprint by reducing new purchases
+- SDG 17: Partnerships for the Goals
+  * Building community partnerships for sustainable development
+
+Social Impact Areas:
+- Environmental Sustainability
+  * Reduced consumption and waste
+  * Lower carbon emissions
+  * Efficient resource utilization
+
+- Community Building
+  * Stronger neighborhood connections
+  * Trust-based sharing economy
+  * Local skill development
+
+- Economic Benefits
+  * Cost savings for community members
+  * Additional income through sharing
+  * Reduced individual spending
+
+Core Value Proposition:
+- Reduce consumption by enabling community sharing
+- Build stronger local communities
+- Track environmental and financial impact
+- Enable skill sharing and learning
+
+Example User Flow - Item Sharing:
+
+1. John's Journey (Lender)
+- John signs up and verifies his account
+- Adds his rarely used power drill to the platform
+  * Uploads photos
+  * Sets availability calendar
+  * Adds description and condition
+  * Sets insurance value
+- Gets notification that Sarah is interested
+- Reviews Sarah's profile and reputation
+- Approves the booking request
+- Uses QR code to verify handover
+- Gets drill back after 2 days
+- Reviews Sarah as a borrower
+- Sees impact metrics (money saved, CO2 reduced)
+
+2. Sarah's Journey (Borrower) 
+- Sarah searches for "power drill" in her area
+- Finds John's drill 2 miles away
+- Checks availability calendar
+- Sends booking request
+- Pays small deposit
+- Gets QR code for pickup
+- Uses the drill
+- Returns it on time
+- Reviews John as a lender
+- Saves money vs buying new drill
+
+Key Pages/Screens:
+
+1. Authentication
+- Landing/Home
+- Login
+- Register 
+- Email Verification
+- Forgot Password
+
+2. User Profile
+- Dashboard
+- Edit Profile
+- My Items
+- My Bookings
+- Impact Metrics
+- Notifications
+- Reviews & Ratings
+
+3. Item Management  
+- Add New Item
+- Edit Item
+- Item Details/View
+- Availability Calendar
+- Item Search/Browse
+- Map View
+- Categories View
+
+4. Booking Flow
+- Booking Request
+- Payment/Deposit
+- QR Code Generation
+- Booking Status
+- Return Confirmation
+- Review & Rating
+
+5. Community Features
+- Community Groups
+- Discussion Forums
+- Events Calendar
+- Skill Exchange Board
+- Resource Pools
+
+6. Admin Dashboard
+- User Management
+- Item Moderation
+- Dispute Resolution
+- Analytics & Reports
+- System Settings
+
+Key Features by User Type:
+
+Regular Users:
+- Search & browse items
+- Make bookings
+- Add items to share
+- Join communities
+- Exchange skills
+- Track personal impact
+
+Community Leaders:
+- Create community groups
+- Organize events
+- Manage resource pools
+- Generate community reports
+- Moderate discussions
+
+Admins:
+- User management
+- Content moderation
+- Handle disputes
+- System configuration
+- Analytics & reporting
+
+Success Metrics:
+- Number of active users
+- Items shared
+- Successful bookings
+- Money saved by community
+- Environmental impact
+- Community engagement
+- User satisfaction scores
+
+This platform aims to make sharing resources as easy as buying them, while building stronger, more sustainable communities. 

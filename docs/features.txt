@@ -1,0 +1,36 @@
+DETAILED FEATURES
+
+1. User Management
+   - Social/Email Authentication
+   - Profile Management
+   - Location-based Services
+   - Reputation System
+   - Notification Preferences
+
+2. Item Management
+   - Item Listing
+   - Availability Calendar
+   - Image Upload with AI Categorization
+   - Item History Tracking
+   - Insurance Value Calculator
+
+3. Booking System
+   - Real-time Availability Check
+   - Booking Request/Approval Flow
+   - In-app Chat
+   - QR Code Generation
+   - Payment Processing
+
+4. Community Features
+   - Community Groups
+   - Discussion Forums
+   - Event Organization
+   - Resource Pools
+   - Skill Exchange
+
+5. Analytics Dashboard
+   - Personal Impact Metrics
+   - Community Statistics
+   - Resource Utilization
+   - Environmental Impact
+   - Financial Savings 

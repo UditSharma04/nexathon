@@ -1,0 +1,55 @@
+DATABASE SCHEMA (MongoDB Collections)
+
+1. Users
+   {
+     _id: ObjectId,
+     email: String (unique),
+     name: String,
+     location: {
+       type: "Point",
+       coordinates: [longitude, latitude]
+     },
+     reputation_score: Number,
+     created_at: Date,
+     verified: Boolean
+   }
+   Index: { location: "2dsphere" }
+
+2. Items
+   {
+     _id: ObjectId,
+     owner_id: ObjectId (ref: Users),
+     title: String,
+     description: String,
+     category: String,
+     condition: String,
+     availability_status: String,
+     insurance_value: Decimal128,
+     created_at: Date,
+     location: {
+       type: "Point",
+       coordinates: [longitude, latitude]
+     }
+   }
+   Index: { location: "2dsphere" }
+
+3. Bookings
+   {
+     _id: ObjectId,
+     item_id: ObjectId (ref: Items),
+     borrower_id: ObjectId (ref: Users),
+     start_date: Date,
+     end_date: Date,
+     status: String,
+     deposit_amount: Decimal128
+   }
+
+4. Reviews
+   {
+     _id: ObjectId,
+     booking_id: ObjectId (ref: Bookings),
+     reviewer_id: ObjectId (ref: Users),
+     rating: Number,
+     comment: String,
+     created_at: Date
+   } 
