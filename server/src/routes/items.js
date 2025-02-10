@@ -61,10 +61,8 @@ router.get('/my-items', auth, async (req, res) => {
 // Get item by ID (Keep this AFTER other specific routes)
 router.get('/:id', auth, async (req, res) => {
   try {
-    const item = await Item.findOne({ 
-      _id: req.params.id,
-      owner: req.user._id 
-    }).populate('owner', 'name email verified');
+    const item = await Item.findById(req.params.id)
+      .populate('owner', 'name email verified');
     
     if (!item) {
       return res.status(404).json({ message: 'Item not found' });

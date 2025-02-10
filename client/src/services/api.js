@@ -8,7 +8,11 @@ export const authAPI = {
 export const itemsAPI = {
   create: (itemData) => axios.post('/api/items', itemData),
   getMyItems: () => axios.get('/api/items/my-items'),
-  getItem: (id) => axios.get(`/api/items/${id}`),
+  getItem: (id) => axios.get(`/api/items/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  }),
   getAllItems: () => axios.get('/api/items/browseItems'),
   updateItem: (id, itemData) => axios.put(`/api/items/${id}`, itemData),
   deleteItem: (id) => axios.delete(`/api/items/${id}`),
