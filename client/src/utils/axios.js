@@ -1,14 +1,14 @@
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+const instance = axios.create({
+  baseURL: 'http://localhost:5000',
   headers: {
-    'Content-Type': 'application/json',
-  },
+    'Content-Type': 'application/json'
+  }
 });
 
-// Add a request interceptor to add auth token
-api.interceptors.request.use(
+// Add a request interceptor
+instance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -21,4 +21,4 @@ api.interceptors.request.use(
   }
 );
 
-export default api; 
+export default instance; 

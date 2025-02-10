@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
+import itemRoutes from './routes/items.js';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(morgan('dev'));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/items', itemRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

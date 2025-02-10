@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../utils/axios';
+import { authAPI } from '../../services/api';
 
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -33,13 +33,15 @@ export default function Register() {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      const response = await api.post('/auth/register', {
+      const response = await authAPI.register({
         name: values.name,
         email: values.email,
         password: values.password,
       });
 
       if (response.data) {
+        const { token, user } = response.data;
+        localStorage.setItem('token', token);
         navigate('/login');
       }
     } catch (err) {

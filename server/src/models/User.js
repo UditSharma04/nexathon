@@ -62,7 +62,18 @@ userSchema.pre('save', async function(next) {
 
 // Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  try {
+    const isMatch = await bcrypt.compare(candidatePassword, this.password);
+    console.log('Password comparison:', { 
+      candidateLength: candidatePassword.length,
+      isMatch 
+    });
+    return isMatch;
+  } catch (error) {
+    console.error('Password comparison error:', error);
+    throw error;
+  }
 };
 
-export default mongoose.model('User', userSchema); 
+// Export the model only if it hasn't been registered
+export default mongoose.models.User || mongoose.model('User', userSchema); 

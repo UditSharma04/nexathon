@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../utils/axios';
+import { authAPI } from '../../services/api';
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -28,12 +28,8 @@ export default function Login() {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      const response = await api.post('/auth/login', values);
-
-      if (response.data) {
-        login(response.data.token);
-        navigate('/home');
-      }
+      await login(values.email, values.password);
+      navigate('/home');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
