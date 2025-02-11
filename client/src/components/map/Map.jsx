@@ -70,7 +70,7 @@ const DEFAULT_LOCATION = {
 };
 
 // Stadia Maps Dark style with brighter text
-const DARK_MAP_STYLE = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?textColor=ffffff&textHaloColor=000000&textHaloWidth=1.2';
+const DARK_MAP_STYLE = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 
 // Component to handle map center updates
 function MapCenter({ center }) {
@@ -248,10 +248,13 @@ export default function Map() {
           center={center}
           zoom={13}
           style={{ height: '100%', width: '100%', background: '#1a1a1a' }}
-          attributionControl={false}
           className="map-dark"
         >
-          <TileLayer url={DARK_MAP_STYLE} />
+          <TileLayer
+            url={DARK_MAP_STYLE}
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            maxZoom={19}
+          />
           <MapCenter center={center} />
           
           {/* User's Location Marker */}
@@ -434,9 +437,31 @@ export default function Map() {
     background-color: #1a1a1a !important;
   }
   .map-dark .leaflet-tile-pane {
-    filter: grayscale(100%) brightness(0.8);
+    filter: brightness(0.9) contrast(1.1);
   }
   :global(.leaflet-container) {
     background: #1a1a1a !important;
+  }
+  :global(.leaflet-popup-content-wrapper) {
+    background: rgba(26, 26, 26, 0.95);
+    color: #fff;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  :global(.leaflet-popup-tip) {
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  :global(.leaflet-control-zoom a) {
+    background-color: rgba(26, 26, 26, 0.9) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+  :global(.leaflet-control-zoom a:hover) {
+    background-color: rgba(38, 38, 38, 0.9) !important;
+  }
+  :global(.custom-popup .leaflet-popup-content) {
+    margin: 0;
+    width: auto !important;
   }
 `}</style>
