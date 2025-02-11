@@ -86,22 +86,33 @@ router.get('/:id', auth, async (req, res) => {
 // Update item
 router.put('/:id', auth, async (req, res) => {
   try {
-    const item = await Item.findOne({ 
-      _id: req.params.id,
-      owner: req.user._id 
-    });
+    const { id } = req.params;
+    const { rules, features, ...otherUpdates } = req.body;
 
+    // Find the item and verify ownership
+    const item = await Item.findById(id);
     if (!item) {
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    // Update fields
-    Object.assign(item, req.body);
-    await item.save();
-    
-    res.json(item);
+    if (item.owner.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to update this item' });
+    }
+
+    // Update the item
+    const updatedItem = await Item.findByIdAndUpdate(
+      id,
+      {
+        ...otherUpdates,
+        ...(rules !== undefined && { rules }),
+        ...(features !== undefined && { features })
+      },
+      { new: true }
+    ).populate('owner', 'name email avatar rating');
+
+    res.json(updatedItem);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: 'Error updating item' });
   }
 });
 
@@ -121,6 +132,32 @@ router.delete('/:id', auth, async (req, res) => {
     res.json({ message: 'Item deleted successfully' });
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+});
+
+// Add this route to handle item status updates
+router.patch('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const item = await Item.findByIdAndUpdate(
+      id,
+      {
+        status,
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!item) {
+      return res.status(404).json({ message: 'Item not found' });
+    }
+
+    res.json(item);
+  } catch (error) {
+    console.error('Error updating item status:', error);
+    res.status(500).json({ message: 'Error updating item status' });
   }
 });
 

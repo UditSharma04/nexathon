@@ -16,6 +16,8 @@ import BrowseItems from './components/browse/BrowseItems';
 import BrowseItemDetail from './components/browse/BrowseItemDetail';
 import BookingRequests from './components/bookings/BookingRequests';
 import BookingInfo from './components/bookings/BookingInfo';
+import { Toaster } from 'react-hot-toast';
+
 function AuthenticatedRoute() {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Navigate to="/home" /> : <Landing />;
@@ -23,116 +25,119 @@ function AuthenticatedRoute() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<AuthenticatedRoute />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    <>
+      <Toaster position="top-right" />
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<AuthenticatedRoute />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Protected routes */}
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/items"
-            element={
-              <ProtectedRoute>
-                <Items />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/items/:id"
-            element={
-              <ProtectedRoute>
-                <ItemDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-items"
-            element={
-              <ProtectedRoute>
-                <MyItems />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/bookings"
-            element={
-              <ProtectedRoute>
-                <Bookings />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/booking_req"
-            element={
-              <ProtectedRoute>
-                <BookingRequests />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/messages"
-            element={
-              <ProtectedRoute>
-                <Messages />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/map"
-            element={
-              <ProtectedRoute>
-                <Map />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/browse"
-            element={
-              <ProtectedRoute>
-                <BrowseItems />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/browse/:id"
-            element={
-              <ProtectedRoute>
-                <BrowseItemDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/booking_info"
-            element={
-              <ProtectedRoute>
-                <BookingInfo />
-              </ProtectedRoute>
-            }
-          />
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            {/* Protected routes */}
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/items"
+              element={
+                <ProtectedRoute>
+                  <Items />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/items/:id"
+              element={
+                <ProtectedRoute>
+                  <ItemDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-items"
+              element={
+                <ProtectedRoute>
+                  <MyItems />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bookings"
+              element={
+                <ProtectedRoute>
+                  <Bookings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/booking_req"
+              element={
+                <ProtectedRoute>
+                  <BookingRequests />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <Messages />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/map"
+              element={
+                <ProtectedRoute>
+                  <Map />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/browse"
+              element={
+                <ProtectedRoute>
+                  <BrowseItems />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/browse/:id"
+              element={
+                <ProtectedRoute>
+                  <BrowseItemDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/booking_info"
+              element={
+                <ProtectedRoute>
+                  <BookingInfo />
+                </ProtectedRoute>
+              }
+            />
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </>
   );
 }
 

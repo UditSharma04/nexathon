@@ -1,6 +1,104 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import { bookingsAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { ReturnButton, ReturnStatus } from './BookingInfo';
+import { reviewAPI } from '../../services/api';
+import ReviewForm from '../reviews/ReviewForm';
+import toast from 'react-hot-toast';
+
+// Add ReviewButtons component
+const ReviewButtons = ({ booking, onReviewSubmit }) => {
+  const { user } = useAuth();
+  const [showUserReviewForm, setShowUserReviewForm] = useState(false);
+  const [showItemReviewForm, setShowItemReviewForm] = useState(false);
+  const [submittedReviews, setSubmittedReviews] = useState(() => {
+    // Initialize from localStorage if available
+    const stored = localStorage.getItem(`reviews-${booking._id}`);
+    return stored ? JSON.parse(stored) : {
+      user: false,
+      item: false
+    };
+  });
+
+  // Add checks for undefined values
+  if (!booking || !user || !booking.owner || !booking.requester) {
+    return null;
+  }
+
+  const isOwner = booking.owner._id === user.id;
+  const isRequester = booking.requester._id === user.id;
+
+  // Check if reviews already exist in the booking or local storage
+  const hasUserReview = booking.userReview || submittedReviews.user;
+
+  // Show review buttons for completed status
+  if (booking.status !== 'completed') return null;
+
+  const handleReviewSubmit = async (reviewData) => {
+    try {
+      await onReviewSubmit(reviewData);
+      
+      // Update local state and localStorage
+      const newSubmittedReviews = {
+        ...submittedReviews,
+        [reviewData.reviewType]: true
+      };
+      
+      setSubmittedReviews(newSubmittedReviews);
+      localStorage.setItem(`reviews-${booking._id}`, JSON.stringify(newSubmittedReviews));
+      
+      // Close the form
+      setShowUserReviewForm(false);
+      
+      // Show success message
+      toast.success('Review submitted successfully!', {
+        style: {
+          background: '#1F2937',
+          color: '#fff',
+          borderRadius: '0.5rem',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+        },
+      });
+    } catch (error) {
+      toast.error('Failed to submit review. Please try again.', {
+        style: {
+          background: '#1F2937',
+          color: '#fff',
+          borderRadius: '0.5rem',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+        },
+      });
+    }
+  };
+
+  return (
+    <div className="mt-4 flex flex-wrap gap-4">
+      {/* User Review Button - Only show for owner to review borrower */}
+      {isOwner && !hasUserReview && (
+        <button
+          onClick={() => setShowUserReviewForm(true)}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg hover:from-primary-500 hover:to-primary-400"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+          Review Borrower
+        </button>
+      )}
+
+      {showUserReviewForm && (
+        <ReviewForm
+          booking={booking}
+          reviewType="user"
+          reviewedUser={booking.requester}
+          onSubmit={handleReviewSubmit}
+          onCancel={() => setShowUserReviewForm(false)}
+        />
+      )}
+    </div>
+  );
+};
 
 export default function BookingRequests() {
   const [requests, setRequests] = useState([]);
@@ -42,6 +140,16 @@ export default function BookingRequests() {
     } catch (err) {
       console.error('Error declining request:', err);
       setError('Failed to decline request');
+    }
+  };
+
+  const handleReviewSubmit = async (reviewData) => {
+    try {
+      await reviewAPI.createReview(reviewData);
+      fetchBookingRequests(); // Refresh the requests list
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+      throw err; // Re-throw to be caught by the ReviewButtons component
     }
   };
 
@@ -192,6 +300,23 @@ export default function BookingRequests() {
                           </button>
                         </div>
                       )}
+
+                      {request.status === 'borrowed' && (
+                        <div className="mt-4">
+                          <ReturnButton 
+                            booking={request} 
+                            onReturn={fetchBookingRequests} 
+                            isRequester={false} 
+                          />
+                          <ReturnStatus booking={request} />
+                        </div>
+                      )}
+
+                      {/* Add ReviewButtons component */}
+                      <ReviewButtons 
+                        booking={request} 
+                        onReviewSubmit={handleReviewSubmit}
+                      />
                     </div>
                   </div>
                 </div>

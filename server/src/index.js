@@ -13,6 +13,7 @@ import chatRoutes from './routes/chats.js';
 import userRoutes from './routes/users.js';
 import Message from './models/Message.js'; // Import Message model
 import bookingRequestRoutes from './routes/bookingRequests.js';
+import reviewRoutes from './routes/reviews.js';
 dotenv.config();
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/booking-requests', bookingRequestRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Initialize global users map
 global.users = new Map();

@@ -117,10 +117,7 @@ export const getIncomingRequests = async (req, res) => {
 export const updateRequestStatus = async (req, res) => {
   try {
     const { requestId } = req.params;
-    const { status } = req.body;
-    
-    console.log('Update request params:', { requestId, status }); // Debug log
-    console.log('Current user:', req.user); // Debug log
+    const { status, isRequester, returnConfirmation } = req.body;
     
     const request = await BookingRequest.findById(requestId)
       .populate('item');
@@ -129,28 +126,35 @@ export const updateRequestStatus = async (req, res) => {
       return res.status(404).json({ message: 'Booking request not found' });
     }
 
-    // If accepting the request, update item status to 'booked'
-    if (status === 'accepted') {
-      // Update item status
-      await Item.findByIdAndUpdate(request.item._id, {
-        status: 'booked'
-      });
+    // If marking as returned, handle return confirmation
+    if (status === 'returned' && returnConfirmation) {
+      // Initialize returnConfirmation if it doesn't exist
+      if (!request.returnConfirmation) {
+        request.returnConfirmation = {
+          owner: false,
+          requester: false
+        };
+      }
 
-      // Decline all other pending requests for this item
-      await BookingRequest.updateMany(
-        {
-          item: request.item._id,
-          status: 'pending',
-          _id: { $ne: requestId }
-        },
-        {
-          status: 'declined'
-        }
-      );
+      // Update the appropriate confirmation
+      if (isRequester) {
+        request.returnConfirmation.requester = true;
+      } else {
+        request.returnConfirmation.owner = true;
+      }
+
+      // If both have confirmed, complete the return
+      if (request.returnConfirmation.owner && request.returnConfirmation.requester) {
+        request.status = 'completed';
+        // Update item status to available
+        await Item.findByIdAndUpdate(request.item._id, {
+          status: 'available'
+        });
+      }
+    } else {
+      request.status = status;
     }
 
-    // Update request status
-    request.status = status;
     await request.save();
 
     // Return populated response
@@ -164,8 +168,48 @@ export const updateRequestStatus = async (req, res) => {
     console.error('Update request status error:', error);
     res.status(500).json({ 
       message: 'Error updating request status',
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      error: error.message
+    });
+  }
+};
+
+export const updateBookingPaymentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, paymentDetails, paymentStatus } = req.body;
+
+    // Find the booking
+    const booking = await BookingRequest.findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    // Update booking status
+    booking.status = status;
+    booking.paymentStatus = paymentStatus;
+    booking.paymentDetails = paymentDetails;
+    await booking.save();
+
+    // Update item status
+    if (status === 'borrowed') {
+      await Item.findByIdAndUpdate(booking.item, {
+        status: 'borrowed',
+        updatedAt: new Date()
+      });
+    }
+
+    // Populate necessary fields before sending response
+    const updatedBooking = await BookingRequest.findById(id)
+      .populate('item', 'name images price insurance status')
+      .populate('owner', 'name email')
+      .populate('requester', 'name email');
+
+    res.json(updatedBooking);
+  } catch (error) {
+    console.error('Error updating booking payment status:', error);
+    res.status(500).json({ 
+      message: 'Error updating booking status',
+      error: error.message
     });
   }
 }; 

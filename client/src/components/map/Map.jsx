@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import DashboardLayout from '../dashboard/DashboardLayout';
+import { Link } from 'react-router-dom';
+import { itemsAPI } from '../../services/api';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -11,6 +13,55 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+
+// Create custom icons for different item types
+const createCustomIcon = (count, allAvailable) => {
+  const size = count > 1 ? 32 : 24;
+  const color = allAvailable ? '#10B981' : '#EF4444';
+  
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `
+      <div style="
+        background-color: ${color}; 
+        width: ${size}px; 
+        height: ${size}px; 
+        border-radius: 50%; 
+        border: 2px solid white; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: ${count > 1 ? '12px' : '0px'};
+      ">
+        ${count > 1 ? count : ''}
+      </div>
+    `,
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2],
+    popupAnchor: [0, -size/2],
+  });
+};
+
+// Group items by location
+const groupItemsByLocation = (items) => {
+  const groups = {};
+  items.forEach(item => {
+    if (!item.location || !item.location.coordinates) return;
+    
+    const key = `${item.location.coordinates[1]},${item.location.coordinates[0]}`;
+    if (!groups[key]) {
+      groups[key] = {
+        items: [],
+        coordinates: [item.location.coordinates[1], item.location.coordinates[0]]
+      };
+    }
+    groups[key].items.push(item);
+  });
+  return groups;
+};
 
 // Default coordinates (will be updated with IP location)
 const DEFAULT_LOCATION = {
@@ -38,6 +89,22 @@ export default function Map() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [locationName, setLocationName] = useState('');
+  const [items, setItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // Fetch all available items
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await itemsAPI.getAllItems();
+        const validItems = response.data.filter(item => item.location && item.location.coordinates);
+        setItems(validItems);
+      } catch (error) {
+        console.error('Error fetching items:', error);
+      }
+    };
+    fetchItems();
+  }, []);
 
   useEffect(() => {
     async function getLocation() {
@@ -176,6 +243,125 @@ export default function Map() {
           </button>
         </div>
 
+        {/* Map Container */}
+        <MapContainer
+          center={center}
+          zoom={13}
+          style={{ height: '100%', width: '100%', background: '#1a1a1a' }}
+          attributionControl={false}
+          className="map-dark"
+        >
+          <TileLayer url={DARK_MAP_STYLE} />
+          <MapCenter center={center} />
+          
+          {/* User's Location Marker */}
+          <Marker position={center}>
+            <Popup>
+              <div className="text-dark-900">
+                <strong>Your Location</strong>
+                <p>{locationName}</p>
+              </div>
+            </Popup>
+          </Marker>
+
+          {/* Item Markers */}
+          {Object.values(groupItemsByLocation(items)).map((group) => (
+            <Marker
+              key={`${group.coordinates[0]}-${group.coordinates[1]}`}
+              position={group.coordinates}
+              icon={createCustomIcon(
+                group.items.length,
+                group.items.every(item => item.status === 'available')
+              )}
+            >
+              <Popup className="custom-popup">
+                <div className="bg-dark-800/95 backdrop-blur-sm rounded-lg overflow-hidden shadow-xl border border-indigo-500/20 w-[320px] max-h-[480px]">
+                  {/* Header with count */}
+                  <div className="px-4 py-3 border-b border-dark-700/50 bg-dark-900/50 backdrop-blur-sm">
+                    <h3 className="text-white font-medium">
+                      {group.items.length} {group.items.length === 1 ? 'Item' : 'Items'} Available Here
+                    </h3>
+                  </div>
+
+                  {/* Scrollable content */}
+                  <div className="overflow-y-auto" style={{ maxHeight: '440px' }}>
+                    {group.items.map((item, index) => (
+                      <div 
+                        key={item._id} 
+                        className={`
+                          transition-all duration-200 hover:bg-dark-700/50
+                          ${index !== 0 ? 'border-t border-dark-700/50' : ''}
+                        `}
+                      >
+                        <div className="p-4 space-y-4">
+                          {/* Image and Status Badge */}
+                          <div className="relative group">
+                            {item.images && item.images[0] ? (
+                              <img
+                                src={item.images[0]}
+                                alt={item.name}
+                                className="w-full h-36 object-contain bg-dark-900/80 rounded-lg transition-transform duration-200 group-hover:scale-[1.02]"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://via.placeholder.com/400x400?text=No+Image';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-36 bg-dark-900/80 rounded-lg flex items-center justify-center">
+                                <svg className="w-12 h-12 text-dark-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                            )}
+                            <div className="absolute top-2 right-2">
+                              <span className={`
+                                px-2 py-1 rounded-full text-xs font-medium
+                                transition-all duration-200
+                                ${item.status === 'available' 
+                                  ? 'bg-green-500/20 text-green-400 border border-green-500/30 group-hover:bg-green-500/30' 
+                                  : 'bg-red-500/20 text-red-400 border border-red-500/30 group-hover:bg-red-500/30'}
+                              `}>
+                                {item.status === 'available' ? 'Available' : 'Unavailable'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Content */}
+                          <div className="space-y-3">
+                            <div>
+                              <h3 className="font-medium text-white text-lg leading-tight">{item.name}</h3>
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <span className="text-xl font-semibold text-white">${item.price}</span>
+                                <span className="text-dark-400 text-sm">/day</span>
+                              </div>
+                            </div>
+
+                            {/* Owner Info */}
+                            <div className="flex items-center gap-2 text-sm text-dark-300">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                              <span>By {item.owner?.name || 'Unknown Owner'}</span>
+                            </div>
+
+                            {/* Action Button */}
+                            <Link
+                              to={`/items/${item._id}`}
+                              className="block w-full text-center text-white px-4 py-2.5 rounded-lg text-sm font-medium border border-indigo-500/20 hover:bg-dark-700/80 transition-all duration-200 hover:border-indigo-500/30"
+                            >
+                              View Details
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+
         {/* Location Search Modal */}
         {showLocationInput && (
           <div className="absolute inset-0 z-[2000] bg-dark-900/90 backdrop-blur-sm flex items-center justify-center">
@@ -238,35 +424,19 @@ export default function Map() {
             </div>
           </div>
         )}
-
-        <MapContainer
-          center={[center.lat, center.lng]}
-          zoom={13}
-          className="h-full w-full z-0"
-          style={{ background: '#1a1a1a' }}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
-            url={DARK_MAP_STYLE}
-            className="map-tiles"
-          />
-          
-          <MapCenter center={[center.lat, center.lng]} />
-          
-          {/* Current location marker */}
-          <Marker position={[center.lat, center.lng]}>
-            <Popup className="dark-popup">
-              <div className="bg-dark-800/95 p-3 rounded-lg">
-                <h3 className="font-semibold text-white">Your Location</h3>
-                <p className="text-sm text-white mb-1">{locationName}</p>
-                <p className="text-xs text-dark-300">
-                  {center.lat.toFixed(6)}, {center.lng.toFixed(6)}
-                </p>
-              </div>
-            </Popup>
-          </Marker>
-        </MapContainer>
       </div>
     </DashboardLayout>
   );
-} 
+}
+
+<style jsx>{`
+  .map-dark {
+    background-color: #1a1a1a !important;
+  }
+  .map-dark .leaflet-tile-pane {
+    filter: grayscale(100%) brightness(0.8);
+  }
+  :global(.leaflet-container) {
+    background: #1a1a1a !important;
+  }
+`}</style>

@@ -1,6 +1,238 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import { bookingsAPI } from '../../services/api';
+import ReviewForm from '../reviews/ReviewForm';
+import { useAuth } from '../../context/AuthContext';
+import { reviewAPI } from '../../services/api';
+import PaymentModal from '../payments/PaymentModal';
+import { itemsAPI } from '../../services/api';
+import toast from 'react-hot-toast';
+
+export const ReturnButton = ({ booking, onReturn, isRequester = false }) => {
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+
+  const handleReturn = async () => {
+    try {
+      setLoading(true);
+      // Pass the user role (requester or owner) in the request
+      await bookingsAPI.updateRequestStatus(booking._id, 'returned', {
+        isRequester,
+        returnConfirmation: {
+          [isRequester ? 'requester' : 'owner']: true
+        }
+      });
+      onReturn(); // Refresh the bookings list
+    } catch (error) {
+      console.error('Error marking as returned:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if user has already confirmed return
+  const hasConfirmed = isRequester 
+    ? booking.returnConfirmation?.requester 
+    : booking.returnConfirmation?.owner;
+
+  // Don't show button if not in borrowed status or already confirmed
+  if (booking.status !== 'borrowed' || hasConfirmed) return null;
+
+  return (
+    <button
+      onClick={handleReturn}
+      disabled={loading || hasConfirmed}
+      className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-500 rounded-lg hover:from-green-500 hover:to-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900 focus:ring-green-500 disabled:opacity-50"
+    >
+      {loading ? (
+        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      )}
+      Confirm Return
+    </button>
+  );
+};
+
+export const ReturnStatus = ({ booking }) => {
+  const { user } = useAuth();
+  const isRequester = booking.requester._id === user.id;
+
+  if (booking.status !== 'borrowed' || !booking.returnConfirmation) return null;
+
+  const getStatusMessage = () => {
+    const userType = isRequester ? 'requester' : 'owner';
+    const hasConfirmed = isRequester 
+      ? booking.returnConfirmation.requester 
+      : booking.returnConfirmation.owner;
+    
+    if (hasConfirmed) {
+      return "Waiting for other party to confirm return";
+    }
+    return "Please confirm the return if the item has been returned";
+  };
+
+  return (
+    <div className="mt-4 space-y-2">
+      <div className="text-sm text-dark-400">Return confirmation status:</div>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-dark-300">Owner:</span>
+          {booking.returnConfirmation.owner ? (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-400/10 text-green-500">
+              Confirmed
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400/10 text-yellow-500">
+              Pending
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-dark-300">Borrower:</span>
+          {booking.returnConfirmation.requester ? (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-400/10 text-green-500">
+              Confirmed
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400/10 text-yellow-500">
+              Pending
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="text-sm text-dark-400 mt-2">
+        {getStatusMessage()}
+      </div>
+    </div>
+  );
+};
+
+// Move ReviewButtons outside of BookingInfo component
+const ReviewButtons = ({ booking, onReviewSubmit }) => {
+  const { user } = useAuth();
+  const [showUserReviewForm, setShowUserReviewForm] = useState(false);
+  const [showItemReviewForm, setShowItemReviewForm] = useState(false);
+  const [submittedReviews, setSubmittedReviews] = useState(() => {
+    // Initialize from localStorage if available
+    const stored = localStorage.getItem(`reviews-${booking._id}`);
+    return stored ? JSON.parse(stored) : {
+      user: false,
+      item: false
+    };
+  });
+
+  // Add checks for undefined values
+  if (!booking || !user || !booking.owner || !booking.requester) {
+    return null;
+  }
+
+  const isOwner = booking.owner._id === user.id;
+  const isRequester = booking.requester._id === user.id;
+
+  // Check if reviews already exist in the booking or local storage
+  const hasUserReview = booking.userReview || submittedReviews.user;
+  const hasItemReview = booking.itemReview || submittedReviews.item;
+
+  // Show review buttons for completed status
+  if (booking.status !== 'completed') return null;
+
+  const handleReviewSubmit = async (reviewData) => {
+    try {
+      await onReviewSubmit(reviewData);
+      
+      // Update local state and localStorage
+      const newSubmittedReviews = {
+        ...submittedReviews,
+        [reviewData.reviewType]: true
+      };
+      
+      setSubmittedReviews(newSubmittedReviews);
+      localStorage.setItem(`reviews-${booking._id}`, JSON.stringify(newSubmittedReviews));
+      
+      // Close the form
+      if (reviewData.reviewType === 'user') {
+        setShowUserReviewForm(false);
+      } else {
+        setShowItemReviewForm(false);
+      }
+      
+      // Show success message
+      toast.success(`${reviewData.reviewType === 'user' ? 'User' : 'Item'} review submitted successfully!`, {
+        style: {
+          background: '#1F2937',
+          color: '#fff',
+          borderRadius: '0.5rem',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+        },
+      });
+    } catch (error) {
+      toast.error('Failed to submit review. Please try again.', {
+        style: {
+          background: '#1F2937',
+          color: '#fff',
+          borderRadius: '0.5rem',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+        },
+      });
+    }
+  };
+
+  return (
+    <div className="mt-4 flex flex-wrap gap-4">
+      {/* User Review Button */}
+      {!hasUserReview && (
+        <button
+          onClick={() => setShowUserReviewForm(true)}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg hover:from-primary-500 hover:to-primary-400"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+          Review {isOwner ? 'Borrower' : 'Owner'}
+        </button>
+      )}
+
+      {/* Item Review Button */}
+      {isRequester && !hasItemReview && booking.item && (
+        <button
+          onClick={() => setShowItemReviewForm(true)}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg hover:from-primary-500 hover:to-primary-400"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+          Review Item
+        </button>
+      )}
+
+      {showUserReviewForm && (
+        <ReviewForm
+          booking={booking}
+          reviewType="user"
+          reviewedUser={isOwner ? booking.requester : booking.owner}
+          onSubmit={handleReviewSubmit}
+          onCancel={() => setShowUserReviewForm(false)}
+        />
+      )}
+
+      {showItemReviewForm && (
+        <ReviewForm
+          booking={booking}
+          reviewType="item"
+          reviewedItem={booking.item}
+          onSubmit={handleReviewSubmit}
+          onCancel={() => setShowItemReviewForm(false)}
+        />
+      )}
+    </div>
+  );
+};
 
 export default function BookingInfo() {
   const [bookings, setBookings] = useState([]);
@@ -9,6 +241,8 @@ export default function BookingInfo() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showBillModal, setShowBillModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchMyBookings();
@@ -17,6 +251,7 @@ export default function BookingInfo() {
   const fetchMyBookings = async () => {
     try {
       const response = await bookingsAPI.getMyRequests();
+      console.log('Bookings data:', response.data); // Debug log
       setBookings(response.data);
     } catch (err) {
       console.error('Error fetching bookings:', err);
@@ -32,6 +267,8 @@ export default function BookingInfo() {
         return 'bg-yellow-400/10 text-yellow-500';
       case 'accepted':
         return 'bg-green-400/10 text-green-500';
+      case 'borrowed':
+        return 'bg-blue-400/10 text-blue-500';
       case 'declined':
         return 'bg-red-400/10 text-red-500';
       case 'cancelled':
@@ -126,88 +363,13 @@ export default function BookingInfo() {
     }
   };
 
-  const BillModal = ({ booking, onClose }) => {
-    const bill = calculateBill(booking);
-
-    return (
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <div className="fixed inset-0 bg-dark-900/80 backdrop-blur-sm" onClick={onClose} />
-          
-          <div className="inline-block align-bottom bg-dark-800/50 backdrop-blur-xl rounded-xl border border-dark-700/50 px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-            <div className="sm:flex sm:items-start">
-              <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                <h3 className="text-lg leading-6 font-medium text-white">
-                  Booking Bill
-                </h3>
-                
-                <div className="mt-4 space-y-4">
-                  {/* Item and Duration Info */}
-                  <div className="bg-dark-900/50 rounded-lg p-4">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-dark-300">Item</span>
-                      <span className="text-white font-medium">{booking.item.name}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm mt-2">
-                      <span className="text-dark-300">Duration</span>
-                      <span className="text-white font-medium">{bill.duration.formatted}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm mt-2">
-                      <span className="text-dark-300">Rate</span>
-                      <span className="text-white font-medium">
-                        ${bill.breakdown.rate.toFixed(2)}/{bill.breakdown.period}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Cost Breakdown */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-dark-300">
-                        Base Price ({bill.duration.formatted} × ${bill.breakdown.rate.toFixed(2)})
-                      </span>
-                      <span className="text-white">${bill.basePrice.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-dark-300">Insurance Value</span>
-                      <span className="text-white">${bill.insuranceAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-dark-300">Platform Fee (2% of base price)</span>
-                      <span className="text-white">${bill.commission.toFixed(2)}</span>
-                    </div>
-                    <div className="border-t border-dark-700/50 pt-2 mt-2">
-                      <div className="flex justify-between items-center text-sm font-medium">
-                        <span className="text-dark-300">Total Amount</span>
-                        <span className="text-white">${bill.totalAmount.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="mt-6 flex justify-end space-x-4">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="px-4 py-2 text-sm font-medium text-dark-300 bg-dark-700/50 rounded-lg hover:bg-dark-700 hover:text-white transition-colors"
-                    >
-                      Close
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handlePayment(booking, bill)}
-                      className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg hover:from-primary-500 hover:to-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900 focus:ring-primary-500 transition-all duration-300"
-                    >
-                      Pay Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const handleReviewSubmit = async (reviewData) => {
+    try {
+      await reviewAPI.createReview(reviewData);
+      fetchMyBookings(); // Refresh the bookings list
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+    }
   };
 
   const renderBookingActions = (booking) => {
@@ -215,14 +377,37 @@ export default function BookingInfo() {
       return (
         <div className="mt-6 flex items-center gap-4">
           <button
-            onClick={() => handleGenerateBill(booking)}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg hover:from-primary-500 hover:to-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900 focus:ring-primary-500 transition-all duration-300"
+            onClick={() => {
+              setSelectedBooking(booking);
+              setShowBillModal(true);
+            }}
+            className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg hover:from-primary-500 hover:to-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900 focus:ring-primary-500 transition-all duration-300"
           >
-            Generate Bill & Pay
+            <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Pay Now
           </button>
         </div>
       );
     }
+
+    if (booking.status === 'borrowed') {
+      const { user } = useAuth();
+      const isRequester = booking.requester._id === user.id;
+
+      return (
+        <div className="mt-6 flex flex-col gap-4">
+          <ReturnButton 
+            booking={booking} 
+            onReturn={fetchMyBookings} 
+            isRequester={isRequester} 
+          />
+          <ReturnStatus booking={booking} />
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -254,6 +439,7 @@ export default function BookingInfo() {
               <option value="all" className="bg-dark-900 text-white">All Status</option>
               <option value="pending" className="bg-dark-900 text-white">Pending</option>
               <option value="accepted" className="bg-dark-900 text-white">Accepted</option>
+              <option value="borrowed" className="bg-dark-900 text-white">Borrowed</option>
               <option value="declined" className="bg-dark-900 text-white">Declined</option>
               <option value="cancelled" className="bg-dark-900 text-white">Cancelled</option>
             </select>
@@ -356,7 +542,11 @@ export default function BookingInfo() {
                         </div>
                       </div>
 
-                      {booking.status === 'accepted' && renderBookingActions(booking)}
+                      <div className="mt-4">
+                        {renderBookingActions(booking)}
+                      </div>
+
+                      <ReviewButtons booking={booking} onReviewSubmit={handleReviewSubmit} />
                     </div>
                   </div>
                 </div>
@@ -367,8 +557,42 @@ export default function BookingInfo() {
       </div>
 
       {showBillModal && selectedBooking && (
-        <BillModal
+        <PaymentModal
           booking={selectedBooking}
+          bill={calculateBill(selectedBooking)}
+          onSuccess={async (paymentDetails) => {
+            try {
+              // Update booking status with payment details
+              const response = await bookingsAPI.updateBookingStatus(selectedBooking._id, {
+                status: 'borrowed',
+                paymentDetails: {
+                  paymentId: paymentDetails.paymentId,
+                  amount: paymentDetails.amount,
+                  method: paymentDetails.method,
+                  timestamp: paymentDetails.timestamp
+                },
+                paymentStatus: 'paid'
+              });
+
+              // Update UI with the response data
+              setBookings(prevBookings => 
+                prevBookings.map(booking => 
+                  booking._id === selectedBooking._id
+                    ? response.data
+                    : booking
+                )
+              );
+              
+              // Show success message
+              console.log('Payment successful:', paymentDetails);
+            } catch (error) {
+              console.error('Error updating booking:', error);
+              setError('Failed to update booking status');
+            } finally {
+              setShowBillModal(false);
+              setSelectedBooking(null);
+            }
+          }}
           onClose={() => {
             setShowBillModal(false);
             setSelectedBooking(null);

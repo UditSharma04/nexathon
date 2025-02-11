@@ -30,6 +30,8 @@ export const itemsAPI = {
   getAllItems: () => api.get('/api/items/browseItems'),
   updateItem: (id, itemData) => api.put(`/api/items/${id}`, itemData),
   deleteItem: (id) => api.delete(`/api/items/${id}`),
+  updateItemStatus: (itemId, status) => 
+    api.patch(`/api/items/${itemId}/status`, { status }),
 };
 
 export const bookingsAPI = {
@@ -42,5 +44,17 @@ export const bookingsAPI = {
   }),
   getMyRequests: () => api.get('/api/booking-requests/my-requests'),
   getIncomingRequests: () => api.get('/api/booking-requests/incoming'),
-  updateRequestStatus: (requestId, status) => api.patch(`/api/booking-requests/${requestId}/status`, { status }),
+  updateRequestStatus: (requestId, status, additionalData = {}) => 
+    api.patch(`/api/booking-requests/${requestId}/status`, { 
+      status,
+      ...additionalData
+    }),
+  updateBookingStatus: (bookingId, updateData) => 
+    api.patch(`/api/booking-requests/${bookingId}/payment`, updateData),
+};
+
+export const reviewAPI = {
+  createReview: (data) => api.post('/api/reviews', data),
+  getItemReviews: (itemId) => api.get(`/api/reviews/item/${itemId}`),
+  getUserReviews: (userId) => api.get(`/api/reviews/user/${userId}`),
 };

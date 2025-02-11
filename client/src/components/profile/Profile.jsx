@@ -3,28 +3,39 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import api from '../../services/api';
 import { formatDistanceToNow } from 'date-fns';
+import ReviewList from '../reviews/ReviewList';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [profileData, setProfileData] = useState(null);
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    fetchProfileData();
-  }, []);
+    const fetchProfileData = async () => {
+      if (!isAuthenticated || !user?._id) {
+        return;
+      }
 
-  const fetchProfileData = async () => {
-    try {
-      const response = await api.get('/api/users/profile');
-      setProfileData(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      setError('Failed to load profile data');
-      setLoading(false);
-    }
-  };
+      try {
+        const response = await api.get('/api/users/profile');
+        const data = {
+          ...response.data,
+          _id: user._id
+        };
+        setProfileData(data);
+      } catch (error) {
+        console.error('Profile fetch error details:', error);
+        setError('Failed to load profile data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [isAuthenticated, user?._id]);
 
   if (loading) {
     return (
@@ -180,6 +191,17 @@ export default function Profile() {
               </ul>
             )}
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="bg-dark-800/30 backdrop-blur-xl rounded-2xl border border-dark-700/50 p-8">
+          <h2 className="text-xl font-semibold text-white mb-6">Reviews</h2>
+          {isAuthenticated && user?._id && (
+            <ReviewList 
+              userId={user._id}
+              type="profile" 
+            />
+          )}
         </div>
       </div>
     </DashboardLayout>

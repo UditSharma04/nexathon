@@ -26,17 +26,31 @@ const bookingSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'accepted', 'rejected', 'completed', 'cancelled'],
+        enum: ['pending', 'accepted', 'declined', 'borrowed', 'completed', 'cancelled'],
         default: 'pending'
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'paid', 'refunded'],
+        default: 'pending'
+    },
+    paymentDetails: {
+        paymentId: String,
+        amount: Number,
+        method: String,
+        timestamp: Date
     },
     totalAmount: {
         type: Number,
         required: true
     },
-    paymentStatus: {
-        type: String,
-        enum: ['pending', 'completed', 'refunded'],
-        default: 'pending'
+    userReview: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review'
+    },
+    itemReview: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review'
     },
     createdAt: {
         type: Date,

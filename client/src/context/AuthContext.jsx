@@ -1,44 +1,58 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
+import api from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
-    
-    setIsLoading(false);
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        try {
+          const response = await api.get('/api/users/profile');
+          const userData = response.data;
+          setUser({
+            ...userData,
+            id: userData._id
+          });
+          setToken(storedToken);
+          setIsAuthenticated(true);
+        } catch (error) {
+          localStorage.removeItem('token');
+          setToken(null);
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email, password) => {
     try {
       const response = await authAPI.login({ email, password });
-      const { token, user } = response.data;
+      const { token: newToken, user: userData } = response.data;
       
-      // Store token and user data
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(userData));
       
-      // Update state
-      setToken(token);
-      setUser(user);
+      setToken(newToken);
+      setUser({
+        ...userData,
+        id: userData._id
+      });
       setIsAuthenticated(true);
       
-      return { success: true, user };
+      return { success: true, user: userData };
     } catch (error) {
-      console.error('Login error:', error.response?.data || error);
       throw error;
     }
   };
@@ -63,13 +77,13 @@ export const AuthProvider = ({ children }) => {
         user,
         token,
         isAuthenticated, 
-        isLoading, 
+        loading,
         login, 
         logout,
         updateUser
       }}
     >
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
