@@ -20,21 +20,26 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: 'https://nexathon-flame.vercel.app',
+    origin: ['https://nexathon-flame.vercel.app', 'http://localhost:5173'],
+    methods: ['GET', 'POST'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
   }
 });
 
 // Export io instance
 export { io };
 
-// CORS configuration
+// CORS should be one of the first middleware
 app.use(cors({
-  origin: 'https://nexathon-flame.vercel.app',
-  credentials: true,
+  origin: ['https://nexathon-flame.vercel.app', 'http://localhost:5173'], // Allow both production and development origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Allow all necessary HTTP methods
+  credentials: true, // Allow credentials
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allow necessary headers
+  exposedHeaders: ['Content-Range', 'X-Content-Range'], // If you need to expose any headers
 }));
 
-// Middleware
+// Then other middleware
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -161,6 +166,9 @@ app.use((err, req, res, next) => {
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
+
+// Also add a preflight handler for complex requests
+app.options('*', cors()); // Enable preflight for all routes
 
 // Connect to MongoDB and start server
 const PORT = process.env.PORT || 5000;
