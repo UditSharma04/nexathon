@@ -20,7 +20,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: 'https://nexathon-flame.vercel.app',
     credentials: true,
   }
 });
@@ -30,7 +30,7 @@ export { io };
 
 // CORS configuration
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite's default port
+  origin: 'https://nexathon-flame.vercel.app',
   credentials: true,
 }));
 
