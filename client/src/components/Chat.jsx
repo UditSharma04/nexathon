@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import { Box, TextField, Button, Typography, Paper, List, ListItem, ListItemText, Divider } from '@mui/material';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = 'https://sharehub-q3oi.onrender.com';
 
 const Chat = () => {
     const [socket, setSocket] = useState(null);
@@ -20,7 +20,7 @@ const Chat = () => {
         socketRef.current = io(SOCKET_URL, {
             transports: ['websocket'],
             cors: {
-                origin: "http://localhost:5173"
+                origin: "https://nexathon-flame.vercel.app"
             }
         });
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from '../../utils/axios';
 
-const API_URL = 'http://localhost:5000'; // Your backend server URL
+const API_URL = 'https://sharehub-q3oi.onrender.com'; // Update API URL
 
 export default function AddItemModal({ isOpen, onClose, onItemAdded }) {
   const [formData, setFormData] = useState({

@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = 'https://sharehub-q3oi.onrender.com';
 
 class SocketService {
   socket = null;

@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
       const storedToken = localStorage.getItem('token');
       if (storedToken) {
         try {
-          const response = await api.get('/api/users/profile');
+          const response = await api.get('https://sharehub-q3oi.onrender.com/api/users/profile');
           const userData = response.data;
           setUser({
             ...userData,

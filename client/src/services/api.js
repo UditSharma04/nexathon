@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000',
+  baseURL: 'https://sharehub-q3oi.onrender.com',
   withCredentials: true
 });
 
