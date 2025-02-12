@@ -1,4 +1,4 @@
-# Nexathon - Item Rental Platform
+# Nexathon - Item Rental Platform 🤝
 
 A full-stack web application for peer-to-peer item rentals with real-time booking management.
 
@@ -111,7 +111,24 @@ npm run dev
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## License
+## 👥 Team
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- [Aayush](https://github.com/Aayush-Duhan) - Full Stack Developer
+- [Udit Sharma](https://github.com/UditSharma04) - Full Stack Developer
+
+---
+
+
+## 🙏 Acknowledgments
+
+- [Create React App](https://create-react-app.dev/) for the initial project setup
+- [Tailwind CSS](https://tailwindcss.com/) for the amazing utility-first CSS framework
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) for database hosting
+
+---
+
+<div align="center">
+  <p>Made with ❤ for developers, by developers.</p>
+  <p>© 2025 ShareHub. All rights reserved.</p>
+</div>
 
